@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.schemas.user import LoginIn, RegisterIn, TokenOut, UserOut
-from app.services import auth_service
+from app.services import auth_service, login_limiter
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 
@@ -16,6 +16,7 @@ def register(body: RegisterIn, db: Session = Depends(get_db)):
 
 
 @router.post("/login", response_model=TokenOut)
-def login(body: LoginIn, db: Session = Depends(get_db)):
-    user, token, expires_in = auth_service.login(db, body.email, body.password)
+def login(body: LoginIn, request: Request, db: Session = Depends(get_db)):
+    ip = login_limiter.client_ip(request)
+    user, token, expires_in = auth_service.login(db, body.email, body.password, ip)
     return TokenOut(access_token=token, expires_in=expires_in, user=UserOut.model_validate(user))

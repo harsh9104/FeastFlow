@@ -41,7 +41,8 @@ def clean_tables():
     with engine.begin() as c:
         c.execute(
             text(
-                "TRUNCATE users, menu_items, load_test_runs, app_metrics, reports RESTART IDENTITY CASCADE"
+                "TRUNCATE users, menu_items, load_test_runs, app_metrics, reports, login_failures "
+                "RESTART IDENTITY CASCADE"
             )
         )
 

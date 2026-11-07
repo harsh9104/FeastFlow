@@ -15,7 +15,7 @@ Auth column: **Public**, **Customer** (role CUSTOMER), **Admin** (role ADMIN), *
 | Method | Path | Auth | Request | Response |
 |---|---|---|---|---|
 | POST | `/auth/register` | Public | `{full_name, email, password (min 8), subscription_tier: FREE or PREMIUM}` | `201 {user}`, `409 EMAIL_TAKEN` |
-| POST | `/auth/login` | Public | `{email, password}` | `200 {access_token, token_type:"bearer", expires_in, user}`, `401` |
+| POST | `/auth/login` | Public | `{email, password}` | `200 {access_token, token_type:"bearer", expires_in, user}`, `401`, `429 TOO_MANY_ATTEMPTS` + `Retry-After` (5 failures per email or 30 per IP in 15 min) |
 | GET | `/users/me` | Any | — | `200 {id, full_name, email, role, subscription_tier}` |
 | PATCH | `/users/me/subscription` | Customer | `{subscription_tier}` | `200 {user}`. Simulated, no payment (A-01). |
 | GET | `/admin/users` | Admin | `?tier=&page=&page_size=` | `200 {items, page, page_size, total}` |

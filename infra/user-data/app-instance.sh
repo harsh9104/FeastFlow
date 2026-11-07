@@ -21,7 +21,7 @@ docker run -d --name feastflow-app --restart always -p 8000:8000 \
   --log-opt awslogs-region="$REGION" \
   --log-opt awslogs-group="$LOG_GROUP" \
   --log-opt awslogs-create-group=true \
-  -e ENV=production \
+  -e ENV=production -e TRUST_FORWARDED_FOR=true \
   -e AWS_REGION="$REGION" \
   -e DATABASE_URL="$DATABASE_URL" \
   -e DB_POOL_SIZE=3 -e DB_MAX_OVERFLOW=2 -e WEB_CONCURRENCY=2 \

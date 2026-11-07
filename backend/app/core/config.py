@@ -25,6 +25,11 @@ class Settings(BaseSettings):
     # Shared password of the seeded load-test accounts (lt-*@loadtest.feastflow.app).
     # Empty: dev/test use DEV_LOADTEST_PASSWORD, production seeds no accounts.
     loadtest_password: str = ""
+    # Login rate limiting: failed attempts allowed per email / per client IP within the window.
+    login_max_failures_per_email: int = 5
+    login_max_failures_per_ip: int = 30
+    login_window_s: int = 900
+    trust_forwarded_for: bool = False  # true only behind the ALB (it appends the real client IP)
     reports_dir: str = "./reports"  # used when S3_BUCKET is empty
     metrics_provider: str = "local"  # local | cloudwatch
     metrics_cache_ttl_s: int = 30
