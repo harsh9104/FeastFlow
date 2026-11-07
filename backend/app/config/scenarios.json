@@ -1,0 +1,18 @@
+{
+  "NORMAL": {
+    "name": "NORMAL",
+    "description": "Normal day: flat load",
+    "users": 25,
+    "spawn_rate": 5,
+    "duration_s": 600,
+    "user_class": "NormalUser"
+  },
+  "FESTIVAL": {
+    "name": "FESTIVAL",
+    "description": "Festival day: heavy ordering traffic",
+    "users": 250,
+    "spawn_rate": 10,
+    "duration_s": 900,
+    "user_class": "FestivalUser"
+  }
+}

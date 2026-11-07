@@ -1,0 +1,12 @@
+{
+  "agent": { "metrics_collection_interval": 60 },
+  "metrics": {
+    "namespace": "CWAgent",
+    "append_dimensions": { "AutoScalingGroupName": "${aws:AutoScalingGroupName}" },
+    "aggregation_dimensions": [["AutoScalingGroupName"]],
+    "metrics_collected": {
+      "mem": { "measurement": ["mem_used_percent"] },
+      "disk": { "measurement": ["disk_used_percent"], "resources": ["/"] }
+    }
+  }
+}
