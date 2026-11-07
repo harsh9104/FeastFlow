@@ -73,6 +73,11 @@ export default function Queue() {
       )}
 
       <h2>Pending (Premium first, then oldest)</h2>
+      {stats && stats.counts_by_status.PENDING > queue.length && (
+        <p className="muted">
+          Showing the first {queue.length} of {stats.counts_by_status.PENDING} pending orders.
+        </p>
+      )}
       <OrderTable orders={queue} empty="Queue is empty." showPosition />
 
       <h2>Preparing</h2>
