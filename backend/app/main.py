@@ -34,6 +34,12 @@ def create_app() -> FastAPI:
     settings = get_settings()
     setup_logging(settings.log_level)
     prod = settings.env == "production"
+    if prod and (settings.jwt_secret in ("", "change-me") or len(settings.jwt_secret) < 32):
+        # With the default secret anyone could forge an admin token.
+        raise RuntimeError("JWT_SECRET must be set to a random value of at least 32 characters")
+    if prod and settings.loadtest_password and len(settings.loadtest_password) < 16:
+        # Those accounts are reachable through the public ALB; the dev password is published.
+        raise RuntimeError("LOADTEST_PASSWORD must be empty or at least 16 random characters")
     local_metrics = settings.metrics_provider == "local"
 
     @asynccontextmanager

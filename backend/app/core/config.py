@@ -19,6 +19,12 @@ class Settings(BaseSettings):
     admin_email: str = ""
     admin_password: str = ""
     locust_url: str = "http://localhost:8089"
+    loadtest_target: str = (
+        ""  # base URL Locust should hit, e.g. http://<alb-dns> (empty: Locust's own --host)
+    )
+    # Shared password of the seeded load-test accounts (lt-*@loadtest.feastflow.app).
+    # Empty: dev/test use DEV_LOADTEST_PASSWORD, production seeds no accounts.
+    loadtest_password: str = ""
     reports_dir: str = "./reports"  # used when S3_BUCKET is empty
     metrics_provider: str = "local"  # local | cloudwatch
     metrics_cache_ttl_s: int = 30
@@ -29,6 +35,17 @@ class Settings(BaseSettings):
     db_instance_id: str = "feastflow-db"
 
 
+# Published in loadtest/locustfile.py, so it is never used in production.
+DEV_LOADTEST_PASSWORD = "loadtest-pass"
+
+
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
+
+
+def loadtest_password(s: Settings) -> str | None:
+    """Password for the seeded load-test accounts, or None to not seed them."""
+    if s.loadtest_password:
+        return s.loadtest_password
+    return None if s.env == "production" else DEV_LOADTEST_PASSWORD

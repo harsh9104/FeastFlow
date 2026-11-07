@@ -7,6 +7,7 @@ Revises: 0005
 import sqlalchemy as sa
 
 from alembic import op
+from app.core.config import get_settings, loadtest_password
 from app.core.security import hash_password
 
 revision = "0006"
@@ -14,13 +15,17 @@ down_revision = "0005"
 branch_labels = None
 depends_on = None
 
-PASSWORD = "loadtest-pass"
 DOMAIN = "loadtest.feastflow.app"
 
 
 def upgrade() -> None:
+    # Production seeds these accounts only when LOADTEST_PASSWORD is set (infra generates a random one);
+    # the dev password is public, and the accounts are reachable through the public ALB.
+    password = loadtest_password(get_settings())
+    if password is None:
+        return
     # Cost 4 keeps the migration fast; users log in once per simulated session anyway.
-    pw = hash_password(PASSWORD, rounds=4)
+    pw = hash_password(password, rounds=4)
     conn = op.get_bind()
     rows = [(f"lt-free-{i:02d}", "FREE") for i in range(1, 71)] + [
         (f"lt-prem-{i:02d}", "PREMIUM") for i in range(1, 31)

@@ -10,7 +10,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import httpx
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -82,6 +82,12 @@ def start(
     duration_s: int | None = None,
 ) -> LoadTestRun:
     cfg = SCENARIOS[scenario]
+    # A run whose time is up but which nobody polled is still RUNNING and would block every new
+    # start with 409. Close such runs first.
+    now = datetime.now(UTC)
+    for stale in db.scalars(select(LoadTestRun).where(LoadTestRun.status == "RUNNING")).all():
+        if (now - stale.started_at).total_seconds() >= stale.duration_seconds + 2:
+            _finalize(db, stale.id, "COMPLETED")
     run = LoadTestRun(
         scenario=scenario,
         status="RUNNING",
@@ -101,16 +107,16 @@ def start(
 
     try:
         _locust("/stats/reset")
-        _locust(
-            "/swarm",
-            "POST",
-            {
-                "user_count": run.target_users,
-                "spawn_rate": run.spawn_rate,
-                "run_time": f"{run.duration_seconds}s",
-                "user_classes": cfg["user_class"],
-            },
-        )
+        swarm = {
+            "user_count": run.target_users,
+            "spawn_rate": run.spawn_rate,
+            "run_time": f"{run.duration_seconds}s",
+            "user_classes": cfg["user_class"],
+        }
+        target = get_settings().loadtest_target
+        if target:  # on AWS the app tells Locust where the ALB is
+            swarm["host"] = target
+        _locust("/swarm", "POST", swarm)
     except Exception as exc:
         log.warning("locust unreachable: %s", exc)
         run.status = "FAILED"
@@ -185,7 +191,14 @@ def get_with_live(db: Session, run_id: int) -> tuple[LoadTestRun, dict | None]:
         raw = dict(run.raw_stats or {})
         raw["peak_rps"] = max(raw.get("peak_rps", 0.0), live["rps"])
         raw["peak_users"] = max(raw.get("peak_users", 0), live["users"])
-        run.raw_stats = raw
+        # Conditional update: if another instance finalized the run meanwhile, don't overwrite
+        # its final raw_stats with this poll's partial copy.
+        db.execute(
+            update(LoadTestRun)
+            .where(LoadTestRun.id == run_id, LoadTestRun.status == "RUNNING")
+            .values(raw_stats=raw)
+            .execution_options(synchronize_session=False)
+        )
         db.commit()
     live_out = dict(live) if live else None
     if live_out is not None:

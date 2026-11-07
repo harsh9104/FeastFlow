@@ -61,6 +61,7 @@ ALL_SUBNETS="$(aws ec2 describe-subnets --filters Name=vpc-id,Values="$VPC_ID" -
 [ -n "${JWT_SECRET:-}" ]     || save JWT_SECRET "$(openssl rand -hex 32)"
 [ -n "${ADMIN_EMAIL:-}" ]    || save ADMIN_EMAIL "admin@feastflow.app"
 [ -n "${ADMIN_PASSWORD:-}" ] || save ADMIN_PASSWORD "$(openssl rand -hex 8)Aa1!"
+[ -n "${LOADTEST_PASSWORD:-}" ] || save LOADTEST_PASSWORD "$(openssl rand -hex 16)"   # app (04) + Locust (06)
 
 # Idempotent ingress helper: ignores "already exists".
 allow() {  # allow SG_ID PORT (--cidr X | --source-group Y)

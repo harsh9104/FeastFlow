@@ -15,11 +15,16 @@ cd infra/scripts
 ./02-s3-ecr.sh              # S3 bucket + ECR repo
 ./02b-push-image.sh         # docker build + push :latest and :<version>
 ./03-rds.sh                 # RDS PostgreSQL (5-10 min)
+./06-locust.sh              # Locust EC2 with loadtest/locustfile.py (before 04: the app needs its IP)
 ./04-launch-template-asg-alb.sh   # ALB, target group, launch template, ASG (min 2 / max 4, CPU 50 %)
 ALERT_EMAIL=you@example.com ./05-alarms-sns.sh   # alarms (ALERT_EMAIL optional)
-./06-locust.sh              # Locust EC2 (used from P8)
 ```
-Generated secrets (DB password, JWT secret, admin password) and resource ids live in `infra/.state.env` (git-ignored).
+`06` runs before `04` on purpose: the launch template passes Locust's private IP to the app as `LOCUST_URL`,
+and the app sends the ALB address to Locust with every start request. If you created the ASG first,
+run `06` and then re-run `04` (it adds a launch-template version) and start an instance refresh.
+Generated secrets (DB password, JWT secret, admin password, load-test password) and resource ids live in
+`infra/.state.env` (git-ignored). The 100 load-test accounts are seeded only because `LOADTEST_PASSWORD` is set;
+the app and Locust both receive the same random value (the public dev password `loadtest-pass` is never used on AWS).
 
 ## Verify (P5 exit criteria)
 ```bash

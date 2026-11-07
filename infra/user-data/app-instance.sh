@@ -1,7 +1,7 @@
 #!/bin/bash
 # Body of the app instance user-data. 04-launch-template-asg-alb.sh prepends a header that exports:
 #   REGION ECR_REGISTRY IMAGE DATABASE_URL JWT_SECRET ADMIN_EMAIL ADMIN_PASSWORD S3_BUCKET
-#   LOG_GROUP CW_CONFIG ASG_NAME ALB_DIMENSION TG_DIMENSION TG_ARN DB_ID
+#   LOG_GROUP CW_CONFIG ASG_NAME ALB_DIMENSION TG_DIMENSION TG_ARN DB_ID LOCUST_URL LOADTEST_TARGET LOADTEST_PASSWORD
 set -ex
 exec > >(tee /var/log/feastflow-userdata.log) 2>&1
 
@@ -30,4 +30,5 @@ docker run -d --name feastflow-app --restart always -p 8000:8000 \
   -e S3_BUCKET="$S3_BUCKET" \
   -e METRICS_PROVIDER=cloudwatch -e ASG_NAME="$ASG_NAME" -e ALB_DIMENSION="$ALB_DIMENSION" \
   -e TG_DIMENSION="$TG_DIMENSION" -e TG_ARN="$TG_ARN" -e DB_INSTANCE_ID="$DB_ID" \
+  -e LOCUST_URL="$LOCUST_URL" -e LOADTEST_TARGET="$LOADTEST_TARGET" -e LOADTEST_PASSWORD="$LOADTEST_PASSWORD" \
   "$IMAGE"

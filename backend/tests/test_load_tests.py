@@ -178,3 +178,34 @@ def test_unreachable_at_finalization_marks_failed(client, admin, fake):
     backdate(rid, 120)
     fake.down = True
     assert client.get(f"{L}/{rid}", headers=admin).json()["run"]["status"] == "FAILED"
+
+
+def test_stale_running_run_does_not_block_a_new_start(client, admin, fake):
+    rid = client.post(L, json={"scenario": "NORMAL", "duration_s": 60}, headers=admin).json()[
+        "run_id"
+    ]
+    backdate(rid, 300)  # time is up but nobody polled it
+    r = client.post(L, json={"scenario": "FESTIVAL"}, headers=admin)
+    assert r.status_code == 202
+    old = client.get(f"{L}/{rid}", headers=admin).json()["run"]
+    assert old["status"] == "COMPLETED"
+
+
+def test_live_run_still_blocks_a_new_start(client, admin, fake):
+    client.post(L, json={"scenario": "NORMAL", "duration_s": 600}, headers=admin)
+    assert client.post(L, json={"scenario": "NORMAL"}, headers=admin).status_code == 409
+
+
+def test_swarm_sends_target_host_when_configured(client, admin, fake, monkeypatch):
+    from app.core.config import get_settings
+
+    monkeypatch.setattr(get_settings(), "loadtest_target", "http://my-alb.example")
+    client.post(L, json={"scenario": "NORMAL"}, headers=admin)
+    data = next(c[2] for c in fake.calls if c[1] == "/swarm")
+    assert data["host"] == "http://my-alb.example"
+
+
+def test_swarm_omits_host_locally(client, admin, fake):
+    client.post(L, json={"scenario": "NORMAL"}, headers=admin)
+    data = next(c[2] for c in fake.calls if c[1] == "/swarm")
+    assert "host" not in data

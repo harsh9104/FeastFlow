@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # Locust load generator on its own t3.small (outside the ASG so it doesn't skew the scaling metric).
-# Starts with a placeholder locustfile; P8 replaces /opt/locust/locustfile.py with the real one.
+# Installs the real loadtest/locustfile.py. Run this BEFORE 04: the app instances need Locust's
+# private IP (LOCUST_URL), and the app tells Locust the ALB address with each swarm request,
+# so Locust itself does not need to know the ALB.
 source "$(dirname "${BASH_SOURCE[0]}")/00-env.sh"
-: "${ALB_DNS:?run 04 first}"
+: "${SG_LOCUST:?run 01-network-sg.sh first}"
 
 EXISTING="$(aws ec2 describe-instances \
   --filters Name=tag:Name,Values=feastflow-locust Name=instance-state-name,Values=pending,running,stopped,stopping \
@@ -10,8 +12,12 @@ EXISTING="$(aws ec2 describe-instances \
 if [ -n "$EXISTING" ]; then
   log "Locust instance already exists: $EXISTING (start it with: aws ec2 start-instances --instance-ids $EXISTING)"
   save LOCUST_INSTANCE_ID "$EXISTING"
+  save LOCUST_PRIVATE_IP "$(aws ec2 describe-instances --instance-ids "$EXISTING" --query 'Reservations[0].Instances[0].PrivateIpAddress' --output text)"
   exit 0
 fi
+
+# Ship the real locustfile inside user-data (base64 avoids any quoting problems).
+LOCUSTFILE_B64="$(base64 < "$REPO_DIR/loadtest/locustfile.py" | tr -d '\n')"
 
 AMI_ID="$(aws ec2 describe-images --owners amazon \
   --filters 'Name=name,Values=al2023-ami-2023.*-x86_64' Name=state,Values=available \
@@ -23,20 +29,14 @@ set -ex
 dnf install -y python3-pip
 pip3 install locust==2.32.4
 mkdir -p /opt/locust
-cat > /opt/locust/locustfile.py <<'PY'
-from locust import HttpUser, task
-
-class Placeholder(HttpUser):
-    @task
-    def health(self):
-        self.client.get("/api/health")
-PY
+echo '$LOCUSTFILE_B64' | base64 -d > /opt/locust/locustfile.py
 cat > /etc/systemd/system/locust.service <<'UNIT'
 [Unit]
 Description=Locust
 After=network-online.target
 [Service]
-ExecStart=/usr/local/bin/locust -f /opt/locust/locustfile.py --web-host 0.0.0.0 --web-port 8089 --host http://$ALB_DNS
+Environment=LOADTEST_PASSWORD=$LOADTEST_PASSWORD
+ExecStart=/usr/local/bin/locust -f /opt/locust/locustfile.py --web-host 0.0.0.0 --web-port 8089
 Restart=always
 [Install]
 WantedBy=multi-user.target

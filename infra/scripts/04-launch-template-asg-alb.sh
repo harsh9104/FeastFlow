@@ -41,6 +41,13 @@ AMI_ID="$(aws ec2 describe-images --owners amazon \
   --query 'sort_by(Images,&CreationDate)[-1].ImageId' --output text)"
 IMAGE="$ECR_IMAGE:latest"
 DATABASE_URL="postgresql+psycopg://feastflow:${DB_PASSWORD}@${DB_HOST}:5432/feastflow"
+if [ -n "${LOCUST_PRIVATE_IP:-}" ]; then
+  LOCUST_URL="http://${LOCUST_PRIVATE_IP}:8089"
+else
+  LOCUST_URL=""
+  log "WARNING: no Locust instance yet (run 06-locust.sh, then re-run this script); load tests will return 503"
+fi
+LOADTEST_TARGET="http://${ALB_DNS}"
 ALB_DIMENSION="${LB_ARN#*:loadbalancer/}"
 TG_DIMENSION="${TG_ARN##*:}"
 CW_CONFIG="$(tr -d '\n' < "$INFRA_DIR/cloudwatch/agent-config.json")"
@@ -48,7 +55,7 @@ CW_CONFIG="$(tr -d '\n' < "$INFRA_DIR/cloudwatch/agent-config.json")"
 USER_DATA="$(
   {
     echo '#!/bin/bash'
-    for v in REGION ECR_REGISTRY IMAGE DATABASE_URL JWT_SECRET ADMIN_EMAIL ADMIN_PASSWORD S3_BUCKET LOG_GROUP CW_CONFIG ASG_NAME ALB_DIMENSION TG_DIMENSION TG_ARN DB_ID; do
+    for v in REGION ECR_REGISTRY IMAGE DATABASE_URL JWT_SECRET ADMIN_EMAIL ADMIN_PASSWORD S3_BUCKET LOG_GROUP CW_CONFIG ASG_NAME ALB_DIMENSION TG_DIMENSION TG_ARN DB_ID LOCUST_URL LOADTEST_TARGET LOADTEST_PASSWORD; do
       printf 'export %s=%q\n' "$v" "${!v}"
     done
     tail -n +2 "$INFRA_DIR/user-data/app-instance.sh"   # drop its shebang

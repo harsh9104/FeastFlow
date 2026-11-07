@@ -7,12 +7,14 @@ Each simulated user logs in ONCE from a seeded pool (~70 % FREE / 30 % PREMIUM) 
 dominate the CPU measurement. Accounts are created by Alembic migration 0006.
 """
 
+import os
 import random
 
 from locust import HttpUser, between
 from locust.exception import StopUser
 
-PASSWORD = "loadtest-pass"
+# Must match the app's LOADTEST_PASSWORD (infra sets a random one on AWS; local runs use the dev default).
+PASSWORD = os.environ.get("LOADTEST_PASSWORD") or "loadtest-pass"
 FREE_ACCOUNTS = 70
 PREMIUM_ACCOUNTS = 30
 DOMAIN = "loadtest.feastflow.app"

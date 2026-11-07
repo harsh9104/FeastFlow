@@ -67,7 +67,8 @@ export default function MyOrders() {
             <span className="muted">{when(o.created_at)}</span>
             <strong>{money(o.total_amount)}</strong>
           </div>
-          {open === o.id && <Detail id={o.id} />}
+          {/* keyed on status so the timeline refetches when the order moves on */}
+          {open === o.id && <Detail key={`${o.id}-${o.status}`} id={o.id} />}
         </article>
       ))}
       {data && data.total > data.page_size && (
