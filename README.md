@@ -18,8 +18,13 @@ curl http://localhost:8000/api/health/ready  # checks MySQL
 | POST | `/api/auth/register` | anyone |
 | POST | `/api/auth/login` | anyone |
 | GET | `/api/users/me` | logged in |
-| POST | `/api/prime/subscribe` � `/api/prime/cancel` | customer (mock payment, 30 days) |
+| POST | `/api/prime/subscribe` · `/api/prime/cancel` | customer (mock payment, 30 days) |
 | GET | `/api/admin/users?prime_only=true` | admin |
+| GET | `/api/restaurants` · `/api/restaurants/{id}/menu` | anyone (images are presigned S3 URLs) |
+| POST | `/api/orders` (optional `Idempotency-Key` header) | customer → 202, sent to `orders-prime` or `orders-standard` |
+| GET | `/api/orders` · `/api/orders/{id}` | owner (or admin) |
+| PATCH | `/api/admin/menu-items/{id}` (price, availability) | admin |
+| POST | `/api/admin/menu-items/{id}/image` (JPEG/PNG/WebP ≤ 2 MB → S3) | admin |
 
 Interactive docs: http://localhost:8000/docs. Default admin: `admin@feastflow.local` / `Admin@12345` (set `ADMIN_EMAIL`/`ADMIN_PASSWORD`).
 
