@@ -29,7 +29,7 @@ services:
       retries: 30
 
   api:
-    build: ./backend
+    build: .
     env_file: .env.example
     ports: ["8000:8000"]
     environment:
@@ -40,7 +40,7 @@ services:
       localstack: {condition: service_healthy}
 
   worker:
-    build: ./backend
+    build: .
     command: ["python", "-m", "worker.main"]
     env_file: .env.example
     environment:

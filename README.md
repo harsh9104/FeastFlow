@@ -42,7 +42,20 @@ standard orders waiting over `AGING_SECONDS` count as urgent. Rows are locked wi
 `FOR UPDATE SKIP LOCKED`, so several workers never take the same order or partner. SNS emails go out at
 CONFIRMED, OUT_FOR_DELIVERY and DELIVERED. Timers: `CONFIRM_SECONDS`, `PREP_SECONDS`, `DELIVERY_SECONDS`.
 
-Interactive docs: http://localhost:8000/docs. Default admin: `admin@feastflow.local` / `Admin@12345` (set `ADMIN_EMAIL`/`ADMIN_PASSWORD`).
+Interactive docs: http://localhost:8000/docs. Default admin: `admin@feastflow.app` / `Admin@12345` (set `ADMIN_EMAIL`/`ADMIN_PASSWORD`).
+
+## Dashboards
+One React app (`frontend/`) served by FastAPI from the same container:
+- **Customer** (`/`): restaurants and menu with S3 photos, cart, checkout, live order tracking, Prime.
+- **Dispatch** (`/admin`, admin login): live order board (Prime first), queue depths, Prime vs standard
+  wait times, delivery partners on/off shift, menu photos and availability, customers.
+
+Pages poll every 3–5 s (pausing in hidden tabs), which works behind the ALB without sticky sessions.
+
+Frontend development with hot reload (API on :8000 via `docker compose up`):
+```bash
+cd frontend && npm install && npm run dev   # http://localhost:5173, /api proxied to :8000
+```
 
 ## Backend tests
 ```bash

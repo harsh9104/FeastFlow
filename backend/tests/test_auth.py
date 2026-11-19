@@ -60,6 +60,19 @@ def test_admin_endpoint_forbidden_for_customer(client):
     assert client.get("/api/admin/users", headers=auth(token)).status_code == 403
 
 
+def test_default_admin_email_is_a_valid_address():
+    from app.core.config import Settings
+    from app.schemas.user import RegisterIn
+
+    # A reserved domain (e.g. .local) would make the seeded admin impossible to use.
+    RegisterIn(name="Admin", email=Settings.model_fields["admin_email"].default, password="x" * 8)
+
+
+def test_login_with_odd_email_is_401_not_422(client):
+    res = client.post("/api/auth/login", json={"email": "admin@site.local", "password": "x"})
+    assert res.status_code == 401
+
+
 def test_seeded_admin_can_list_users(client, db):
     assert ensure_admin(db) is True
     assert ensure_admin(db) is False  # idempotent

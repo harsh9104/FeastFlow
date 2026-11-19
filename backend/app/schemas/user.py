@@ -10,8 +10,10 @@ class RegisterIn(BaseModel):
 
 
 class LoginIn(BaseModel):
-    email: EmailStr
-    password: str
+    # Plain string on purpose: login should only ever answer "wrong email or password",
+    # never lock out an account because validation rules changed after it was created.
+    email: str = Field(min_length=3, max_length=255)
+    password: str = Field(max_length=200)
 
 
 class UserOut(BaseModel):

@@ -13,6 +13,11 @@ os.environ.update(
     AWS_ENDPOINT_URL="",
     S3_PUBLIC_ENDPOINT_URL="",
     TIMER_JITTER="0",  # deterministic worker timers
+    # Pin settings a developer's shell might also define, so tests behave like CI.
+    ADMIN_EMAIL="admin@feastflow.app",
+    ADMIN_PASSWORD="Admin@12345",
+    JWT_SECRET="test-secret",
+    SNS_EMAIL_SUBSCRIPTIONS="true",
 )
 
 import pytest  # noqa: E402

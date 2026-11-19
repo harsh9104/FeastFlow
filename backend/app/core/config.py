@@ -10,7 +10,8 @@ class Settings(BaseSettings):
     database_url: str = "mysql+pymysql://feastflow:feastflow@localhost:3306/feastflow"
     jwt_secret: str = "change-me"
     jwt_expire_minutes: int = 120
-    admin_email: str = "admin@feastflow.local"
+    # Must pass email validation: reserved domains such as .local are rejected.
+    admin_email: str = "admin@feastflow.app"
     admin_password: str = "Admin@12345"
     prime_plan_days: int = 30
 
@@ -25,6 +26,9 @@ class Settings(BaseSettings):
     s3_public_endpoint_url: str | None = None
     image_url_ttl_seconds: int = 3600
     seed_images: bool = False  # upload placeholder food images for items missing one
+
+    # Built React app (copied in by the Dockerfile). Missing = API only.
+    static_dir: str = "static"
 
     max_order_lines: int = 20
     max_item_quantity: int = 20
