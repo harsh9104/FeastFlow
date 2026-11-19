@@ -7,7 +7,9 @@ services:
       MYSQL_PASSWORD: feastflow
       MYSQL_ROOT_PASSWORD: root
     ports: ["3306:3306"]
-    volumes: [mysql-data:/var/lib/mysql]
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./infra/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot"]
       interval: 5s

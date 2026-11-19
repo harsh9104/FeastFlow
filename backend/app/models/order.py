@@ -15,6 +15,8 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
 from app.models.menu import MenuItem, Restaurant
+from app.models.partner import DeliveryPartner
+from app.models.user import User
 
 ORDER_STATUSES = (
     "PLACED",  # saved, message sent (or about to be) to SQS
@@ -38,6 +40,8 @@ class Order(Base):
         UniqueConstraint("user_id", "idempotency_key", name="ux_orders_user_idem"),
         Index("ix_orders_status_priority", "status", "priority", "created_at"),
         Index("ix_orders_user_created", "user_id", "created_at"),
+        # The worker's ticker looks up "orders in status X whose timer is due".
+        Index("ix_orders_status_due", "status", "stage_due_at"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -54,10 +58,19 @@ class Order(Base):
     # NULL means the SQS send failed; P3's sweeper re-sends these.
     enqueued_at: Mapped[datetime | None]
     confirmed_at: Mapped[datetime | None]
+    preparing_at: Mapped[datetime | None]
+    ready_at: Mapped[datetime | None]  # food ready, waiting for / handed to a partner
     assigned_at: Mapped[datetime | None]
     delivered_at: Mapped[datetime | None]
+    # When the current stage's simulated timer runs out (see dispatch_service).
+    stage_due_at: Mapped[datetime | None]
+    partner_id: Mapped[int | None] = mapped_column(
+        ForeignKey("delivery_partners.id", ondelete="SET NULL")
+    )
 
     restaurant: Mapped[Restaurant] = relationship()
+    partner: Mapped[DeliveryPartner | None] = relationship()
+    user: Mapped[User] = relationship()
     items: Mapped[list["OrderItem"]] = relationship(
         back_populates="order", cascade="all, delete-orphan", order_by="OrderItem.id"
     )

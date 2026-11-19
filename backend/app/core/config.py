@@ -29,6 +29,24 @@ class Settings(BaseSettings):
     max_order_lines: int = 20
     max_item_quantity: int = 20
 
+    # Customers get order emails through one SNS topic with a per-user filter policy.
+    sns_email_subscriptions: bool = True
+
+    # ---- worker / simulated kitchen and delivery (seconds) ----
+    confirm_seconds: float = 2  # CONFIRMED -> PREPARING
+    prep_seconds: float = 20  # PREPARING -> food ready, needs a partner
+    delivery_seconds: float = 40  # OUT_FOR_DELIVERY -> DELIVERED, partner free again
+    timer_jitter: float = 0.25  # +/- 25% so orders don't all move in lockstep
+    # A standard order waiting longer than this is treated like Prime, so a flood of
+    # Prime orders on a festival day can't starve ordinary customers forever.
+    aging_seconds: float = 120
+    # Worker reads Prime first N times, then standard first once (same anti-starvation idea).
+    prime_poll_weight: int = 4
+    worker_tick_seconds: float = 1
+    worker_batch_size: int = 50
+    # Orders whose SQS send failed (enqueued_at NULL) are re-sent after this long.
+    sweeper_after_seconds: float = 10
+
 
 @lru_cache
 def get_settings() -> Settings:

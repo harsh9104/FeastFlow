@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Request
 
-from app.api import admin_menu, admin_users, auth, health, menu, orders
+from app.api import admin_dispatch, admin_menu, admin_users, auth, health, menu, orders
 from app.core.instance import instance_id
 
 
@@ -19,6 +19,7 @@ def create_app() -> FastAPI:
     app.include_router(menu.router)
     app.include_router(orders.router)
     app.include_router(admin_menu.router)
+    app.include_router(admin_dispatch.router)
     return app
 
 

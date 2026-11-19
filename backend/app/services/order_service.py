@@ -13,10 +13,12 @@ from app.models.user import User
 from app.schemas.order import OrderIn, OrderOut
 from app.services import queue_publisher
 
-_LOAD = (
+ORDER_LOAD = (
     selectinload(Order.items).selectinload(OrderItem.menu_item),
     selectinload(Order.events),
     selectinload(Order.restaurant),
+    selectinload(Order.partner),
+    selectinload(Order.user),
 )
 
 
@@ -25,12 +27,14 @@ def _unprocessable(msg: str) -> HTTPException:
 
 
 def get_order(db: Session, order_id: int) -> Order | None:
-    return db.scalar(select(Order).options(*_LOAD).where(Order.id == order_id))
+    return db.scalar(select(Order).options(*ORDER_LOAD).where(Order.id == order_id))
 
 
 def _by_idempotency_key(db: Session, user_id: int, key: str) -> Order | None:
     return db.scalar(
-        select(Order).options(*_LOAD).where(Order.user_id == user_id, Order.idempotency_key == key)
+        select(Order)
+        .options(*ORDER_LOAD)
+        .where(Order.user_id == user_id, Order.idempotency_key == key)
     )
 
 
@@ -111,7 +115,7 @@ def list_orders_for_user(
     total = db.scalar(select(func.count()).select_from(Order).where(Order.user_id == user_id))
     orders = db.scalars(
         select(Order)
-        .options(*_LOAD)
+        .options(*ORDER_LOAD)
         .where(Order.user_id == user_id)
         .order_by(Order.created_at.desc(), Order.id.desc())
         .offset((page - 1) * page_size)
@@ -131,6 +135,9 @@ def to_out(order: Order) -> OrderOut:
         total_amount=order.total_amount,
         delivery_address=order.delivery_address,
         created_at=order.created_at,
+        customer_name=order.user.name,
+        partner_name=order.partner.name if order.partner else None,
+        partner_phone=order.partner.phone if order.partner else None,
         items=[
             {
                 "menu_item_id": i.menu_item_id,

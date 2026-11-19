@@ -39,6 +39,9 @@ class OrderOut(BaseModel):
     total_amount: Decimal
     delivery_address: str
     created_at: datetime
+    customer_name: str | None = None
+    partner_name: str | None = None
+    partner_phone: str | None = None
     items: list[OrderItemOut]
     events: list[OrderEventOut]
 

@@ -38,11 +38,22 @@ def s3_presigner():
 
 
 @lru_cache
+def sns():
+    return client("sns")
+
+
+@lru_cache
+def topic_arn() -> str:
+    # create_topic is idempotent: it returns the existing topic's ARN.
+    return sns().create_topic(Name=get_settings().sns_topic_name)["TopicArn"]
+
+
+@lru_cache
 def queue_url(name: str) -> str:
     return sqs().get_queue_url(QueueName=name)["QueueUrl"]
 
 
 def reset_clients() -> None:
     """Tests call this so each test gets clients bound to a fresh moto mock."""
-    for fn in (sqs, s3, s3_presigner, queue_url):
+    for fn in (sqs, s3, s3_presigner, sns, topic_arn, queue_url):
         fn.cache_clear()

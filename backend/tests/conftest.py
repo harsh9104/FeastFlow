@@ -12,6 +12,7 @@ os.environ.update(
     AWS_DEFAULT_REGION="us-east-1",
     AWS_ENDPOINT_URL="",
     S3_PUBLIC_ENDPOINT_URL="",
+    TIMER_JITTER="0",  # deterministic worker timers
 )
 
 import pytest  # noqa: E402
@@ -40,6 +41,7 @@ def fake_aws():
         for name in (s.sqs_prime_queue, s.sqs_standard_queue):
             aws.sqs().create_queue(QueueName=name)
         aws.s3().create_bucket(Bucket=s.s3_bucket)
+        aws.topic_arn()  # creates the SNS topic
         yield
     aws.reset_clients()
 
