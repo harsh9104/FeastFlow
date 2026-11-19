@@ -20,6 +20,11 @@ services:
     ports: ["4566:4566"]
     volumes:
       - ./infra/localstack/init-aws.sh:/etc/localstack/init/ready.d/init-aws.sh:ro
+    healthcheck:
+      # Healthy only once init-aws.sh has created the queues, topic and bucket.
+      test: ["CMD", "awslocal", "s3api", "head-bucket", "--bucket", "feastflow-assets"]
+      interval: 5s
+      retries: 30
 
   api:
     build: ./backend
@@ -30,7 +35,7 @@ services:
       AWS_SECRET_ACCESS_KEY: test
     depends_on:
       mysql: {condition: service_healthy}
-      localstack: {condition: service_started}
+      localstack: {condition: service_healthy}
 
   worker:
     build: ./backend
@@ -41,7 +46,7 @@ services:
       AWS_SECRET_ACCESS_KEY: test
     depends_on:
       mysql: {condition: service_healthy}
-      localstack: {condition: service_started}
+      localstack: {condition: service_healthy}
 
 volumes:
   mysql-data:

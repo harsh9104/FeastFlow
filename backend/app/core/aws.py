@@ -1,0 +1,48 @@
+"""boto3 clients. On AWS they authenticate through the EC2 instance profile (LabRole);
+locally AWS_ENDPOINT_URL points them at LocalStack."""
+
+from functools import lru_cache
+
+import boto3
+from botocore.config import Config
+
+from app.core.config import get_settings
+
+_RETRIES = Config(retries={"max_attempts": 3, "mode": "standard"}, connect_timeout=2)
+
+
+def client(service: str, endpoint_url: str | None = None):
+    s = get_settings()
+    return boto3.client(
+        service,
+        region_name=s.aws_region,
+        endpoint_url=endpoint_url or s.aws_endpoint_url or None,
+        config=_RETRIES,
+    )
+
+
+@lru_cache
+def sqs():
+    return client("sqs")
+
+
+@lru_cache
+def s3():
+    return client("s3")
+
+
+@lru_cache
+def s3_presigner():
+    s = get_settings()
+    return client("s3", endpoint_url=s.s3_public_endpoint_url)
+
+
+@lru_cache
+def queue_url(name: str) -> str:
+    return sqs().get_queue_url(QueueName=name)["QueueUrl"]
+
+
+def reset_clients() -> None:
+    """Tests call this so each test gets clients bound to a fresh moto mock."""
+    for fn in (sqs, s3, s3_presigner, queue_url):
+        fn.cache_clear()
