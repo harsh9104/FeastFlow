@@ -1,31 +1,47 @@
 services:
-  db:
-    image: postgres:16
+  mysql:
+    image: mysql:8.0
     environment:
-      POSTGRES_USER: feastflow
-      POSTGRES_PASSWORD: feastflow
-      POSTGRES_DB: feastflow
-    ports: ["5432:5432"]
-    volumes: [pgdata:/var/lib/postgresql/data]
+      MYSQL_DATABASE: feastflow
+      MYSQL_USER: feastflow
+      MYSQL_PASSWORD: feastflow
+      MYSQL_ROOT_PASSWORD: root
+    ports: ["3306:3306"]
+    volumes: [mysql-data:/var/lib/mysql]
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U feastflow"]
-      interval: 3s
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot"]
+      interval: 5s
       retries: 20
-  app:
-    build: .
-    env_file: .env
+
+  localstack:
+    image: localstack/localstack:3.8
     environment:
-      DATABASE_URL: postgresql+psycopg://feastflow:feastflow@db:5432/feastflow
-      LOCUST_URL: http://locust:8089
-    volumes: [reports:/srv/reports]
-    depends_on:
-      db: { condition: service_healthy }
+      SERVICES: sqs,sns,s3
+    ports: ["4566:4566"]
+    volumes:
+      - ./infra/localstack/init-aws.sh:/etc/localstack/init/ready.d/init-aws.sh:ro
+
+  api:
+    build: ./backend
+    env_file: .env.example
     ports: ["8000:8000"]
-  locust:
-    build: ./loadtest
-    command: ["--host", "http://app:8000"]
-    ports: ["8089:8089"]
-    depends_on: [app]
+    environment:
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+    depends_on:
+      mysql: {condition: service_healthy}
+      localstack: {condition: service_started}
+
+  worker:
+    build: ./backend
+    command: ["python", "-m", "worker.main"]
+    env_file: .env.example
+    environment:
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+    depends_on:
+      mysql: {condition: service_healthy}
+      localstack: {condition: service_started}
+
 volumes:
-  pgdata:
-  reports:
+  mysql-data:

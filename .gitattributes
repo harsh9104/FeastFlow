@@ -1,6 +1,2 @@
-# Keep LF everywhere: shell scripts and the Dockerfile must not get CRLF on Windows checkouts.
-* text=auto eol=lf
-*.pdf binary
-*.zip binary
-*.png binary
-*.jpg binary
+* text=auto
+*.sh text eol=lf
