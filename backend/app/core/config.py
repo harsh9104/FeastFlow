@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     database_url: str = "mysql+pymysql://feastflow:feastflow@localhost:3306/feastflow"
     jwt_secret: str = "change-me"
     jwt_expire_minutes: int = 120
+    # bcrypt work factor: 12 (~0.25 s per hash) in production; tests use 4.
+    bcrypt_rounds: int = 12
     # Must pass email validation: reserved domains such as .local are rejected.
     admin_email: str = "admin@feastflow.app"
     admin_password: str = "Admin@12345"
@@ -26,6 +28,18 @@ class Settings(BaseSettings):
     s3_public_endpoint_url: str | None = None
     image_url_ttl_seconds: int = 3600
     seed_images: bool = False  # upload placeholder food images for items missing one
+
+    # ---- festival-day load testing ----
+    # Seeded test customers (no email subscriptions, orders flagged synthetic).
+    loadtest_users: int = 200
+    loadtest_prime_percent: int = 30
+    loadtest_email_domain: str = "loadtest.feastflow.app"
+    # Only when set can anyone log in as a test customer (Locust needs this).
+    # Unset = the accounts exist for the festival simulator but can't be logged into.
+    loadtest_password: str | None = None
+    festival_max_orders: int = 5000
+    # Locust web API on the load-generator EC2, e.g. http://10.0.1.23:8089
+    locust_url: str | None = None
 
     # Built React app (copied in by the Dockerfile). Missing = API only.
     static_dir: str = "static"

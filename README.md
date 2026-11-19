@@ -5,6 +5,15 @@ deployed on AWS Learner Lab (EC2 + ALB + ASG, RDS MySQL, SQS, SNS, S3, CloudWatc
 
 The full project plan is in [docs/PLAN.md](docs/PLAN.md).
 
+## Run without Docker (quick demo)
+```bash
+cd frontend && npm install && npm run build && cd ../backend
+python -m venv .venv && .venv/Scripts/pip install -r requirements-dev.txt   # once
+.venv/Scripts/python scripts/demo_no_docker.py    # http://127.0.0.1:8000
+```
+Real API, worker and UI; SQLite instead of MySQL and in-memory fakes for SQS/SNS/S3
+(so food photos don't display). Fresh data on every start, timers shortened.
+
 ## Run locally
 ```bash
 docker compose up --build
@@ -29,6 +38,8 @@ curl http://localhost:8000/api/health/ready  # checks MySQL
 | GET · POST | `/api/admin/partners` | admin |
 | PATCH | `/api/admin/partners/{id}` (`AVAILABLE` / `OFFLINE`, not mid-delivery) | admin |
 | GET | `/api/admin/dispatch/stats` (queue depths, partners, Prime vs standard wait times) | admin |
+| GET · POST | `/api/admin/festival/runs` · `POST …/{id}/cancel` | admin |
+| GET | `/api/admin/loadtest` · `POST /api/admin/loadtest/start` (`normal`/`festival`) · `/stop` | admin |
 
 ## Order worker
 `python -m worker.main` runs beside the API on every instance. It confirms orders from SQS
@@ -56,6 +67,27 @@ Frontend development with hot reload (API on :8000 via `docker compose up`):
 ```bash
 cd frontend && npm install && npm run dev   # http://localhost:5173, /api proxied to :8000
 ```
+
+## Festival day
+Admin → **Festival** has two tools:
+- **Order burst**: N orders over M seconds from the 200 seeded test customers (30% Prime), through the
+  normal checkout → SQS → worker path. Shows Prime priority and rider shortage on the dispatch board.
+  Runs are stored in `festival_runs`, so any instance can show progress or cancel; a run whose instance
+  dies is marked failed after 30 s without a heartbeat.
+- **Load generator**: starts/stops Locust (`loadtest/locustfile.py`) through its web API. `normal` =
+  20 users for 10 min; `festival` = 20 min peaking at 450 users, long enough for the ASG to scale out
+  and back in. Locally: `docker compose --profile loadtest up` (Locust UI on :8089).
+
+Test customers are `customer0001@loadtest.feastflow.app` … They can log in only when
+`LOADTEST_PASSWORD` is set (Locust needs it); unset, the accounts stay locked. Their orders are flagged
+synthetic (no emails) and they're hidden from the customer list.
+
+Measured with the no-Docker demo (300 orders in 30 s, 30% Prime, 20 riders, 10 s deliveries):
+
+| | Avg wait for rider | Avg order to door |
+|---|---|---|
+| Prime | 12.8 s | 32.8 s |
+| Standard | 70.5 s | 86.4 s |
 
 ## Backend tests
 ```bash

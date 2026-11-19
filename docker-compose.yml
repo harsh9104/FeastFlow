@@ -50,5 +50,14 @@ services:
       mysql: {condition: service_healthy}
       localstack: {condition: service_healthy}
 
+  # Only with: docker compose --profile loadtest up   (UI at http://localhost:8089)
+  locust:
+    build: ./loadtest
+    profiles: [loadtest]
+    command: ["-f", "/home/locust/locustfile.py", "--host", "http://api:8000"]
+    env_file: .env.example
+    ports: ["8089:8089"]
+    depends_on: [api]
+
 volumes:
   mysql-data:

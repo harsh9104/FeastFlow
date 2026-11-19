@@ -175,3 +175,32 @@ export async function api<T>(
 export function parseUtc(ts: string): Date {
   return new Date(/[zZ]|[+-]\d\d:?\d\d$/.test(ts) ? ts : `${ts}Z`);
 }
+
+export interface FestivalRun {
+  id: number;
+  status: "RUNNING" | "COMPLETED" | "CANCELLED" | "FAILED";
+  requested_orders: number;
+  prime_percent: number;
+  duration_seconds: number;
+  created_orders: number;
+  prime_orders: number;
+  failed_orders: number;
+  instance_id: string;
+  error: string | null;
+  started_at: string;
+  finished_at: string | null;
+}
+
+export interface LoadTestStatus {
+  state: "ready" | "spawning" | "running" | "stopping" | "stopped" | string;
+  users: number;
+  rps: number;
+  failures_per_second: number;
+  fail_ratio: number;
+  requests: number;
+  failures: number;
+  avg_ms: number;
+  p50_ms: number | null;
+  p95_ms: number | null;
+  errors: { name: string; error: string; count: number }[];
+}

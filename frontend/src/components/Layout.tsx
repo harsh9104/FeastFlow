@@ -22,6 +22,7 @@ export function Layout() {
               <>
                 <NavLink to="/admin" end>Orders</NavLink>
                 <NavLink to="/admin/partners">Partners</NavLink>
+                <NavLink to="/admin/festival">Festival</NavLink>
                 <NavLink to="/admin/menu">Menu</NavLink>
                 <NavLink to="/admin/users">Customers</NavLink>
               </>

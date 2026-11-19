@@ -6,6 +6,7 @@ import { Loading } from "./components/ui";
 import { AdminMenu } from "./pages/admin/AdminMenu";
 import { Board } from "./pages/admin/Board";
 import { Customers } from "./pages/admin/Customers";
+import { Festival } from "./pages/admin/Festival";
 import { Partners } from "./pages/admin/Partners";
 import { AuthPage } from "./pages/customer/AuthPage";
 import { Cart } from "./pages/customer/Cart";
@@ -46,6 +47,7 @@ export function App() {
 
         <Route path="admin" element={<RequireUser role="ADMIN"><Board /></RequireUser>} />
         <Route path="admin/partners" element={<RequireUser role="ADMIN"><Partners /></RequireUser>} />
+        <Route path="admin/festival" element={<RequireUser role="ADMIN"><Festival /></RequireUser>} />
         <Route path="admin/menu" element={<RequireUser role="ADMIN"><AdminMenu /></RequireUser>} />
         <Route path="admin/users" element={<RequireUser role="ADMIN"><Customers /></RequireUser>} />
         <Route path="*" element={<div className="empty">Page not found.</div>} />

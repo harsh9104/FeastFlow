@@ -10,11 +10,17 @@ ALGORITHM = "HS256"
 
 
 def hash_password(password: str) -> str:
-    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt(get_settings().bcrypt_rounds)).decode()
 
 
 def verify_password(password: str, hashed: str) -> bool:
-    return bcrypt.checkpw(password.encode(), hashed.encode())
+    try:
+        return bcrypt.checkpw(password.encode(), hashed.encode())
+    except ValueError:  # not a bcrypt hash, e.g. a locked test account ("!")
+        return False
+
+
+LOCKED_PASSWORD_HASH = "!"  # matches no password
 
 
 def create_token(user_id: int, role: str, is_prime: bool) -> str:

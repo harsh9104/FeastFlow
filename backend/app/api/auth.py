@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
@@ -16,6 +16,12 @@ def _token_for(user: User) -> TokenOut:
         access_token=create_token(user.id, user.role, user.is_prime),
         user=UserOut.model_validate(user),
     )
+
+
+def _block_test_users(user: User) -> None:
+    # Load-test accounts have a fixed Prime/standard split that the reports rely on.
+    if user.is_test_user:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Not allowed for load-test accounts")
 
 
 @router.post("/auth/register", response_model=TokenOut, status_code=status.HTTP_201_CREATED)
@@ -39,9 +45,11 @@ def me(user: User = Depends(get_current_user)):
 @router.post("/prime/subscribe", response_model=TokenOut)
 def subscribe_prime(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     """Returns a fresh token so the UI shows the Prime badge straight away."""
+    _block_test_users(user)
     return _token_for(user_service.subscribe_prime(db, user))
 
 
 @router.post("/prime/cancel", response_model=TokenOut)
 def cancel_prime(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    _block_test_users(user)
     return _token_for(user_service.cancel_prime(db, user))

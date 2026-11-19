@@ -1,12 +1,12 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from fastapi import HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
-from app.core.security import hash_password, verify_password
+from app.core.security import LOCKED_PASSWORD_HASH, hash_password, verify_password
 from app.core.time import utcnow
 from app.models.user import User
 
@@ -71,3 +71,46 @@ def ensure_admin(db: Session) -> bool:
         db.rollback()
         return False
     return True
+
+
+PRIME_FOREVER = datetime(2099, 1, 1)
+
+
+def loadtest_email(i: int) -> str:
+    return f"customer{i:04d}@{get_settings().loadtest_email_domain}"
+
+
+def ensure_test_users(db: Session) -> int:
+    """Create the festival/load-test customers if missing, and set their password from
+    LOADTEST_PASSWORD (or lock them when it's unset). Safe on every boot and on several
+    instances at once. Returns how many were created."""
+    s = get_settings()
+    # One bcrypt hash shared by all of them: hashing 200 times would add ~1 min to boot.
+    pw_hash = hash_password(s.loadtest_password) if s.loadtest_password else LOCKED_PASSWORD_HASH
+    existing = set(db.scalars(select(User.email).where(User.is_test_user.is_(True))))
+    prime_count = round(s.loadtest_users * s.loadtest_prime_percent / 100)
+    created = 0
+    for i in range(1, s.loadtest_users + 1):
+        email = loadtest_email(i)
+        if email in existing:
+            continue
+        db.add(
+            User(
+                name=f"Festival Customer {i}",
+                email=email,
+                password_hash=pw_hash,
+                is_test_user=True,
+                prime_expires_at=PRIME_FOREVER if i <= prime_count else None,
+            )
+        )
+        created += 1
+    try:
+        db.commit()
+    except IntegrityError:  # another instance seeded at the same moment
+        db.rollback()
+        created = 0
+    # ORM update (not a raw table update) so User objects already loaded in this
+    # session see the new hash too.
+    db.execute(update(User).where(User.is_test_user.is_(True)).values(password_hash=pw_hash))
+    db.commit()
+    return created

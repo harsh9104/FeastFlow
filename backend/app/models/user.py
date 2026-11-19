@@ -19,6 +19,9 @@ class User(Base):
     # Prime is active while this is in the future. There is no separate is_prime
     # column, so the flag can never go stale after a subscription runs out.
     prime_expires_at: Mapped[datetime | None]
+    # Seeded festival/load-test customer: hidden from the customer list, no emails,
+    # and their orders are flagged synthetic so reports can separate them.
+    is_test_user: Mapped[bool] = mapped_column(default=False, server_default="0", index=True)
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
 
     @property

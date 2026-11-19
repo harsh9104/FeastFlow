@@ -84,7 +84,7 @@ def place_order(
         total_amount=sum(menu[i].price * q for i, q in qty.items()),
         delivery_address=body.delivery_address.strip(),
         idempotency_key=idempotency_key,
-        is_synthetic=synthetic,
+        is_synthetic=synthetic or user.is_test_user,
         items=[
             OrderItem(menu_item_id=i, quantity=q, unit_price=menu[i].price)
             for i, q in qty.items()
