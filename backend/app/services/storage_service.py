@@ -36,21 +36,60 @@ def upload_image(key: str, data: bytes, content_type: str) -> None:
     )
 
 
-_PALETTE = ["#e4572e", "#f3a712", "#29335c", "#669bbc", "#2a9d8f", "#8f2d56", "#6a994e"]
+# Warm two-tone backgrounds, picked per dish so neighbouring cards differ.
+_GRADIENTS = [
+    ("#ff9a3c", "#ff5e3a"), ("#f7b733", "#fc4a1a"), ("#f857a6", "#ff5858"),
+    ("#ffb347", "#ffcc33"), ("#56ab2f", "#a8e063"), ("#ee9ca7", "#ffdde1"),
+    ("#ff7e5f", "#feb47b"), ("#e65c00", "#f9d423"),
+]
+
+# First keyword found in the dish name/category picks the emoji.
+# Specific dishes come before generic words ("Masala Dosa" is a dosa, not a curry).
+_DISH_EMOJI = [
+    ("dosa", "🥞"), ("idli", "🍥"), ("vada", "🍩"), ("biryani", "🍛"), ("pizza", "🍕"),
+    ("burger", "🍔"), ("noodle", "🍜"), ("momo", "🥟"), ("chai", "🍵"), ("coffee", "☕"),
+    ("naan", "🫓"), ("roti", "🫓"), ("paratha", "🫓"), ("dal", "🍲"),
+    ("curry", "🍛"), ("masala", "🍛"), ("paneer", "🍛"), ("jamun", "🍮"),
+    ("dessert", "🍨"), ("kulfi", "🍨"), ("ice", "🍨"),
+    ("cake", "🍰"), ("coffee", "☕"), ("tea", "🍵"), ("chai", "🍵"), ("shake", "🥤"),
+    ("lassi", "🥛"), ("juice", "🧃"), ("beverage", "🥤"), ("noodle", "🍜"), ("hakka", "🍜"),
+    ("manchurian", "🥘"), ("chilli", "🌶️"), ("chicken", "🍗"), ("fried rice", "🍚"),
+    ("rice", "🍚"), ("spring roll", "🌯"), ("roll", "🌯"), ("momo", "🥟"), ("pizza", "🍕"),
+    ("burger", "🍔"), ("fries", "🍟"), ("sandwich", "🥪"), ("pasta", "🍝"), ("salad", "🥗"),
+    ("soup", "🍲"), ("egg", "🍳"), ("fish", "🐟"), ("prawn", "🍤"), ("taco", "🌮"),
+]
 
 
-def placeholder_svg(name: str, seed: int) -> bytes:
-    """Simple coloured card with the dish name, until real photos are uploaded."""
-    bg = _PALETTE[seed % len(_PALETTE)]
-    label = html.escape(name)
-    return (
-        '<svg xmlns="http://www.w3.org/2000/svg" width="480" height="320" viewBox="0 0 480 320">'
-        f'<rect width="480" height="320" fill="{bg}"/>'
-        '<circle cx="240" cy="130" r="62" fill="#fff" opacity="0.18"/>'
-        '<text x="240" y="148" font-size="56" text-anchor="middle">🍽</text>'
-        f'<text x="240" y="250" font-family="sans-serif" font-size="28" fill="#fff" '
-        f'text-anchor="middle">{label}</text></svg>'
-    ).encode()
+def dish_emoji(name: str, category: str = "") -> str:
+    text = f"{name} {category}".lower()
+    return next((e for key, e in _DISH_EMOJI if key in text), "🍽️")
+
+
+def placeholder_svg(name: str, seed: int, category: str = "") -> bytes:
+    """Food-style illustration (dish emoji on a plate over a warm gradient) until a
+    real photo is uploaded from the admin Menu page."""
+    a, b = _GRADIENTS[seed % len(_GRADIENTS)]
+    emoji = html.escape(dish_emoji(name, category))
+    return f"""<svg xmlns="http://www.w3.org/2000/svg"
+  width="480" height="360" viewBox="0 0 480 360">
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="{a}"/><stop offset="1" stop-color="{b}"/>
+  </linearGradient>
+  <radialGradient id="plate" cx="0.5" cy="0.45" r="0.6">
+    <stop offset="0" stop-color="#ffffff"/><stop offset="0.85" stop-color="#f3f0ea"/>
+    <stop offset="1" stop-color="#e2ddd4"/>
+  </radialGradient>
+</defs>
+<rect width="480" height="360" fill="url(#bg)"/>
+<circle cx="70" cy="60" r="90" fill="#fff" opacity="0.12"/>
+<circle cx="430" cy="320" r="120" fill="#fff" opacity="0.10"/>
+<ellipse cx="240" cy="208" rx="150" ry="40" fill="#000" opacity="0.15"/>
+<ellipse cx="240" cy="192" rx="150" ry="118" fill="url(#plate)"/>
+<ellipse cx="240" cy="192" rx="118" ry="90" fill="none" stroke="#e8e2d8" stroke-width="3"/>
+<text x="240" y="242" font-size="150" text-anchor="middle"
+  font-family="Segoe UI Emoji, Apple Color Emoji, Noto Color Emoji, sans-serif">{emoji}</text>
+</svg>""".encode()
 
 
 def seed_placeholder_images(items) -> int:
@@ -66,7 +105,11 @@ def seed_placeholder_images(items) -> int:
         except ClientError as exc:
             if exc.response["Error"]["Code"] not in ("404", "NoSuchKey", "NotFound"):
                 raise
-        upload_image(item.image_key, placeholder_svg(item.name, item.id), "image/svg+xml")
+        upload_image(
+            item.image_key,
+            placeholder_svg(item.name, item.id, item.category),
+            "image/svg+xml",
+        )
         uploaded += 1
     return uploaded
 

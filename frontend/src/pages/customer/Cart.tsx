@@ -5,7 +5,8 @@ import { ApiError, api } from "../../api";
 import type { Order } from "../../api";
 import { useAuth } from "../../auth";
 import { useCart } from "../../cart";
-import { Alert, Empty, PrimeBadge, VegMark } from "../../components/ui";
+import { IconPin } from "../../components/icons";
+import { Alert, DishImage, Empty, VegMark } from "../../components/ui";
 import { money } from "../../format";
 
 const ADDRESS_KEY = "feastflow.address";
@@ -31,9 +32,10 @@ export function Cart() {
 
   if (cart.count === 0) {
     return (
-      <Empty>
-        <p>Your cart is empty.</p>
-        <Link to="/" className="btn primary">Browse restaurants</Link>
+      <Empty icon="🛍️">
+        <h2>Your cart is empty</h2>
+        <p className="muted">Good food is always cooking. Go ahead, order some yummy items from the menu.</p>
+        <Link to="/" className="btn primary">See restaurants near you</Link>
       </Empty>
     );
   }
@@ -72,57 +74,92 @@ export function Cart() {
 
   return (
     <div className="checkout">
-      <section className="card">
-        <h1>Your order</h1>
-        <p className="muted">From {cart.restaurantName}</p>
-        <ul className="cart-lines">
+      <form className="checkout-main" onSubmit={checkout} id="checkout">
+        <section className="card step-card">
+          <span className="step-no">1</span>
+          <div className="step-body">
+            <h2><IconPin /> Delivery address</h2>
+            <textarea
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              required
+              minLength={5}
+              maxLength={255}
+              rows={3}
+              placeholder="Flat / house no., street, landmark, area"
+            />
+          </div>
+        </section>
+
+        <section className="card step-card">
+          <span className="step-no">2</span>
+          <div className="step-body">
+            <h2>Delivery speed</h2>
+            {user?.is_prime ? (
+              <div className="speed prime-on">
+                <span className="speed-icon">👑</span>
+                <div>
+                  <strong>Prime priority is on</strong>
+                  <p className="muted">Your order jumps the kitchen queue and gets the first free rider.</p>
+                </div>
+              </div>
+            ) : (
+              <div className="speed">
+                <span className="speed-icon">🛵</span>
+                <div>
+                  <strong>Standard delivery</strong>
+                  <p className="muted">
+                    Busy night? <Link to="/prime">Join Prime</Link> and skip the queue.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+
+        <section className="card step-card">
+          <span className="step-no">3</span>
+          <div className="step-body">
+            <h2>Payment</h2>
+            <p className="muted">Cash on delivery. This is a demo, so no real payment is taken.</p>
+          </div>
+        </section>
+      </form>
+
+      <aside className="card bill">
+        <header className="bill-head">
+          <span className="bill-emoji">🍽️</span>
+          <div>
+            <strong>{cart.restaurantName}</strong>
+            <small className="muted">{cart.count} item{cart.count > 1 ? "s" : ""}</small>
+          </div>
+        </header>
+        <ul className="bill-lines">
           {cart.lines.map(({ item, quantity }) => (
             <li key={item.id}>
+              <DishImage item={item} className="mini" />
               <span className="name"><VegMark veg={item.is_veg} /> {item.name}</span>
-              <div className="stepper">
-                <button onClick={() => cart.setQuantity(item.id, quantity - 1)} aria-label={`Remove one ${item.name}`}>−</button>
+              <div className="qty">
+                <button type="button" onClick={() => cart.setQuantity(item.id, quantity - 1)} aria-label={`Remove one ${item.name}`}>−</button>
                 <span>{quantity}</span>
-                <button onClick={() => cart.setQuantity(item.id, quantity + 1)} aria-label={`Add one ${item.name}`}>+</button>
+                <button type="button" onClick={() => cart.setQuantity(item.id, quantity + 1)} aria-label={`Add one ${item.name}`}>+</button>
               </div>
               <span className="amount">{money(Number(item.price) * quantity)}</span>
             </li>
           ))}
         </ul>
-        <div className="total-row">
-          <span>Total</span>
-          <strong>{money(cart.total)}</strong>
+        <div className="bill-details">
+          <h3>Bill details</h3>
+          <div><span>Item total</span><span>{money(cart.total)}</span></div>
+          <div><span>Delivery fee</span><span className="free">FREE</span></div>
+          <div className="to-pay"><span>To pay</span><strong>{money(cart.total)}</strong></div>
         </div>
-        <p className="muted small-print">Final prices are confirmed by the restaurant when you place the order.</p>
-      </section>
-
-      <form className="card form" onSubmit={checkout}>
-        <h2>Delivery</h2>
-        <label>
-          Address
-          <textarea
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            required
-            minLength={5}
-            maxLength={255}
-            rows={3}
-            placeholder="House no., street, area, city"
-          />
-        </label>
-        {user?.is_prime ? (
-          <div className="prime-note">
-            <PrimeBadge /> Your order goes to the front of the queue.
-          </div>
-        ) : user ? (
-          <div className="prime-note muted">
-            Busy day? <Link to="/prime">Prime members</Link> are served first.
-          </div>
-        ) : null}
         <Alert>{error}</Alert>
-        <button className="btn primary block" disabled={busy || user?.role === "ADMIN"}>
-          {busy ? "Placing order…" : user ? `Place order · ${money(cart.total)}` : "Log in to place order"}
+        <button className="btn primary block large" form="checkout" disabled={busy || user?.role === "ADMIN"}>
+          {busy ? "Placing order…" : user ? `Place order · ${money(cart.total)}` : "Sign in to place order"}
         </button>
-      </form>
+        <p className="muted small-print">Prices are re-checked by the restaurant when you place the order.</p>
+      </aside>
     </div>
   );
 }

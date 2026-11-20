@@ -89,12 +89,16 @@ def setup() -> None:
     Base.metadata.create_all(engine)
     menu = load_migration("0003_seed_menu.py")
     partners = load_migration("0004_delivery_partners.py")
+    details = load_migration("0006_menu_details.py")
     with SessionLocal() as db:
         for rid, name, area, cuisine in menu.RESTAURANTS:
-            db.add(Restaurant(id=rid, name=name, area=area, cuisine=cuisine))
+            rating, minutes, cost, offer = details.DETAILS[rid]
+            db.add(Restaurant(id=rid, name=name, area=area, cuisine=cuisine, rating=rating,
+                              delivery_minutes=minutes, cost_for_two=cost, offer=offer))
         for iid, rid, name, cat, veg, price, desc in menu.ITEMS:
             db.add(MenuItem(id=iid, restaurant_id=rid, name=name, category=cat, is_veg=veg,
-                            price=price, description=desc, image_key=f"menu/{iid}.svg"))
+                            price=price, description=desc, image_key=f"menu/{iid}.svg",
+                            is_bestseller=iid in details.BESTSELLERS))
         for i, first in enumerate(partners.FIRST):
             last = partners.LAST[i % len(partners.LAST)]
             db.add(DeliveryPartner(name=f"{first} {last}", phone=f"+91900000{i + 1:04d}"))

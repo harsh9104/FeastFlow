@@ -24,6 +24,10 @@ export interface Restaurant {
   area: string;
   cuisine: string;
   is_open: boolean;
+  rating: string;
+  delivery_minutes: number;
+  cost_for_two: number;
+  offer: string | null;
 }
 
 export interface MenuItem {
@@ -35,6 +39,7 @@ export interface MenuItem {
   is_veg: boolean;
   price: string;
   is_available: boolean;
+  is_bestseller: boolean;
   image_url: string | null;
 }
 
