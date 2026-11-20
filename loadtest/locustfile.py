@@ -6,7 +6,8 @@ The traffic goes through the ALB, so CPU rises on the app instances and the Auto
 Scaling Group adds instances during the festival profile.
 
 Run locally (UI on :8089):   locust -f locustfile.py --host http://localhost:8000
-Headless festival run:       locust -f locustfile.py --host http://<alb-dns> --headless --profile festival
+Headless festival run:
+    locust -f locustfile.py --host http://<alb-dns> --headless --profile festival
 The admin dashboard starts/stops runs through Locust's web API (POST /swarm, GET /stop).
 """
 
