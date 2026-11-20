@@ -8,17 +8,19 @@ Then open http://127.0.0.1:8000 (admin: admin@feastflow.app / Admin@12345).
 
 What's real: the API, the worker (SQS consumer + timers + rider assignment), the
 React build, the festival simulator. What's faked: MySQL is a local SQLite file and
-SQS/SNS/S3 are moto's in-memory mocks, so food images don't load in the browser and
-no emails are sent. Timers are shortened so orders finish in ~20 s.
+SQS/SNS/S3 come from a local moto server on :4566 (photos load, no emails are sent).
+Timers are shortened so orders finish in ~20 s.
 Use `docker compose up` for the real stack (MySQL + LocalStack).
 
-Load test against it (needs `pip install locust==2.32.4` in some environment):
-    locust -f ../loadtest/locustfile.py --host http://127.0.0.1:8000
-with LOADTEST_PASSWORD=Festival-local-only-1 set in that shell.
+If loadtest/.venv has Locust installed, it is started too (UI on :8089), so the
+admin Festival page's load generator works:
+    cd loadtest && python -m venv .venv && .venv/Scripts/pip install locust==2.32.4
 """
 
+import atexit
 import importlib.util
 import os
+import subprocess
 import sys
 import threading
 from pathlib import Path
@@ -33,8 +35,8 @@ os.environ.update(
     AWS_SECRET_ACCESS_KEY="testing",
     AWS_SESSION_TOKEN="testing",
     AWS_DEFAULT_REGION="us-east-1",
-    AWS_ENDPOINT_URL="",
-    S3_PUBLIC_ENDPOINT_URL="",
+    AWS_ENDPOINT_URL="http://127.0.0.1:4566",
+    S3_PUBLIC_ENDPOINT_URL="http://127.0.0.1:4566",
     STATIC_DIR=str(REPO / "frontend" / "dist"),
     ADMIN_EMAIL="admin@feastflow.app",
     ADMIN_PASSWORD="Admin@12345",
@@ -46,9 +48,14 @@ for key, value in {"CONFIRM_SECONDS": "2", "PREP_SECONDS": "6", "DELIVERY_SECOND
     os.environ.setdefault(key, value)
 sys.path.insert(0, str(BACKEND))
 
-from moto import mock_aws  # noqa: E402
+import logging  # noqa: E402
 
-mock_aws().start()
+from moto.server import ThreadedMotoServer  # noqa: E402
+
+logging.getLogger("werkzeug").setLevel(logging.WARNING)  # moto server's per-request lines
+
+# A real HTTP endpoint (unlike in-process mocks), so the browser can load S3 photos.
+ThreadedMotoServer(ip_address="127.0.0.1", port=4566, verbose=False).start()
 
 import uvicorn  # noqa: E402
 from sqlalchemy import select  # noqa: E402
@@ -97,10 +104,28 @@ def setup() -> None:
         seed_placeholder_images(db.scalars(select(MenuItem)).all())
 
 
+def start_locust() -> None:
+    venv = REPO / "loadtest" / ".venv"
+    exe = venv / ("Scripts/locust.exe" if os.name == "nt" else "bin/locust")
+    if not exe.exists():
+        print("Locust not installed in loadtest/.venv; the load generator panel stays offline.")
+        return
+    proc = subprocess.Popen(
+        [str(exe), "-f", str(REPO / "loadtest" / "locustfile.py"),
+         "--host", "http://127.0.0.1:8000", "--web-host", "127.0.0.1", "--web-port", "8089"],
+        env={**os.environ, "LOADTEST_USERS": str(get_settings().loadtest_users)},
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    atexit.register(proc.terminate)
+    print("Locust UI on http://127.0.0.1:8089")
+
+
 if __name__ == "__main__":
     if not (REPO / "frontend" / "dist" / "index.html").is_file():
         print("Build the UI first: cd frontend && npm install && npm run build", file=sys.stderr)
     setup()
+    start_locust()
     stop = threading.Event()
     for target in (run_consumer, run_ticker):
         threading.Thread(target=target, args=(stop,), daemon=True).start()

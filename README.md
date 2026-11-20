@@ -11,8 +11,9 @@ cd frontend && npm install && npm run build && cd ../backend
 python -m venv .venv && .venv/Scripts/pip install -r requirements-dev.txt   # once
 .venv/Scripts/python scripts/demo_no_docker.py    # http://127.0.0.1:8000
 ```
-Real API, worker and UI; SQLite instead of MySQL and in-memory fakes for SQS/SNS/S3
-(so food photos don't display). Fresh data on every start, timers shortened.
+Real API, worker and UI; SQLite instead of MySQL and a local moto server on :4566 for
+SQS/SNS/S3 (photos load, no emails). Fresh data on every start, timers shortened. If Locust
+is installed in `loadtest/.venv`, it starts too, so the Festival page's load generator works.
 
 ## Run locally
 ```bash
