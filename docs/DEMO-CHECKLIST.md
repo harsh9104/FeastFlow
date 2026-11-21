@@ -90,5 +90,5 @@ https://us-east-1.console.aws.amazon.com/cloudwatch/home?region=us-east-1#dashbo
 
 ## 7. Finish
 1. Run `./stop.sh` in Git Bash (or just leave it: the Lambda stops everything at 23:00 IST).
-2. Tell Claude "screenshots done" to put the measured numbers into the report and push to GitHub.
+2. Tell Claude "screenshots done" to put the measured numbers into the report.
 3. **After grading only**: `CONFIRM=yes ./99-teardown.sh` deletes everything.
