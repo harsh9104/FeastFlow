@@ -214,6 +214,25 @@ instance carried the whole rush, before the new instances were ready. No instanc
 during the test showed requests alternating over 2, then 3 instances (for example 3 / 2 / 3 out of 8),
 and response time fell from 1.4 s on one instance to about 100 ms on three.
 
+**Second run (22 Nov 2026, times IST), same profile, to repeat the result:**
+
+| Time | Users | Instances | Avg CPU | Requests/s | p95 response | What happened |
+|---|---|---|---|---|---|---|
+| 00:57 | 50 | 1 | ~25 % | 27 | 70 ms | Test starts |
+| 01:00 | 209 | 1 | 81 % | 90 | 790 ms | CPU above the 60 % target |
+| 01:03 | 209 | 1 → **2** | 71 % | 89 | 660 ms | **Scale-out alarm fires, 2nd instance launched** |
+| 01:06 | 375 | 2 → **3** | 70 % → 45 % | 42 | 11 s | Users jump while the 3rd instance boots: the worst minute of the test |
+| 01:09 | 300 | **3** | 62 % | | | All 3 targets healthy; 9 sample requests split 3 / 2 / 4 over the three instances |
+| 01:11 | 300 | 3 | 49 % | 166 | **85 ms** | Fully recovered on 3 instances; rush ends, users drop to 30 |
+| 01:25 | 30 | 3 → **2** | low | 17 | 57 ms | **Scale-in alarm (about 15 min below target), instance removed** |
+| 01:27 | 30 | 2 → **1** | low | 17 | | Back to 1 instance at 01:28 |
+
+**Totals:** 94,174 requests, 325 failed (**0.35 %**), all fast `503 Server busy` rejections from the
+admission limit while one or two instances carried a sudden jump in users. No failures after the 3rd
+instance turned healthy at 01:09, and no instance crashed. Both runs show the same pattern: scale-out
+about 5-6 minutes after load rises, scale-in about 15 minutes after it drops, and response time back
+near 100 ms once the new instances are in service.
+
 **Problem found and fixed during testing.** The first run crashed instances in a loop under load
 although CPU stayed low. The logs showed `QueuePool limit … reached, connection timed out`: FastAPI's
 worker threads and the database connections were waiting on each other (a thread-pool / connection-pool
@@ -222,7 +241,7 @@ deadlock), so even the health check stopped answering and the ALB replaced the i
 connections), extra requests queue without holding a thread or connection, and the health check skips
 the queue. After the fix the system degraded gracefully and scaled exactly as designed.
 
-**Cleaning up after a load test:** Locust places real orders (15,873 in this run), far more than 20
+**Cleaning up after a load test:** Locust places real orders (15,873 in the first run, 14,607 in the second), far more than 20
 riders can deliver. `infra/scripts/clear-test-orders.sh` cancels leftover load-test orders so real
 customers aren't queued behind them.
 
