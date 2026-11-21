@@ -14,6 +14,10 @@ MAX="$(asg MaxSize)"
 
 TARGET=$(( N * 2 )); [ "$TARGET" -le "$MAX" ] || TARGET="$MAX"
 [ "$TARGET" -gt "$N" ] || { echo "ASG is at max ($MAX): lower the load or raise ASG_MAX first"; exit 1; }
+# Pause CPU target tracking while rolling: otherwise its scale-in alarm can remove the extra
+# instances (possibly the NEW ones) before we terminate the old ones. Always resumed on exit.
+aws autoscaling suspend-processes --auto-scaling-group-name "$ASG_NAME" --scaling-processes AlarmNotification
+trap 'aws autoscaling resume-processes --auto-scaling-group-name "$ASG_NAME" --scaling-processes AlarmNotification' EXIT
 aws autoscaling update-auto-scaling-group --auto-scaling-group-name "$ASG_NAME" --max-size "$MAX" --desired-capacity "$TARGET"
 log "old instance(s): $OLD; launching $(( TARGET - N )) new one(s), waiting until healthy (~4-6 min)..."
 
