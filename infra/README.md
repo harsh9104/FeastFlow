@@ -22,6 +22,7 @@ cd infra/scripts
 ./05-launch-template-alb-asg.sh # ALB, launch template, ASG min 1 / max 4, scale at 60 % CPU
 ALERT_EMAIL=you@example.com ./06-cloudwatch-alarms.sh   # alarms + "FeastFlow" dashboard
 ./07-lambda-eventbridge.sh      # nightly auto-stop at 23:00 IST (STOP_CRON / STOP_TZ to change)
+ALERT_EMAIL=you@example.com ./09-budget.sh   # $50/month budget, emails at 50 % / 80 % spent + 100 % forecast
 ```
 Then open `http://<ALB_DNS>` (printed by 05, also in `infra/.state.env`) and log in as the admin.
 `ADMIN_PASSWORD` is in `infra/.state.env`, along with the other generated secrets and resource ids.

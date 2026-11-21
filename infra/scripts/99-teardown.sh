@@ -40,6 +40,7 @@ ALARMS="$(aws cloudwatch describe-alarms --alarm-name-prefix feastflow- --query 
 # shellcheck disable=SC2086
 [ -z "$ALARMS" ] || try aws cloudwatch delete-alarms --alarm-names $ALARMS
 try aws cloudwatch delete-dashboards --dashboard-names "$DASHBOARD_NAME"
+try aws budgets delete-budget --account-id "$ACCOUNT_ID" --budget-name feastflow-monthly
 for t in "$SNS_TOPIC_NAME" "$ALERTS_TOPIC_NAME"; do
   try aws sns delete-topic --topic-arn "arn:aws:sns:${REGION}:${ACCOUNT_ID}:$t"
 done
