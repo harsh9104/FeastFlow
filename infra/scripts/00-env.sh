@@ -53,6 +53,7 @@ ALERTS_TOPIC_NAME="feastflow-alerts"
 LAMBDA_NAME="feastflow-auto-stop"
 SCHEDULE_NAME="feastflow-nightly-stop"
 DASHBOARD_NAME="FeastFlow"
+BUDGET_NAME="feastflow-monthly"
 INSTANCE_PROFILE="LabInstanceProfile"           # Learner Lab can't create roles: reuse LabRole
 LAB_ROLE_ARN="arn:aws:iam::${ACCOUNT_ID}:role/LabRole"
 

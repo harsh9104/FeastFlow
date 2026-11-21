@@ -209,3 +209,40 @@ export interface LoadTestStatus {
   p95_ms: number | null;
   errors: { name: string; error: string; count: number }[];
 }
+
+// ---- admin Cloud & Cost panel ----
+export type SectionError = { error: string };
+export interface CloudInstance {
+  id: string;
+  az: string | null;
+  type: string | null;
+  lifecycle: string | null;
+  health: string | null;
+  launched_at: string | null;
+}
+export interface MetricPoint {
+  t: string;
+  v: number;
+}
+export interface CostLine {
+  item: string;
+  qty: number;
+  unit_per_hour: number;
+  per_hour: number;
+  note: string;
+}
+export interface CloudOverview {
+  configured: boolean;
+  served_by: string;
+  fetched_at?: string;
+  asg?: SectionError | { name: string; min: number; max: number; desired: number; cpu_target: number | null; instances: CloudInstance[] };
+  metrics?: SectionError | { cpu: MetricPoint[]; instances: MetricPoint[] };
+  activities?: SectionError | { items: { at: string | null; description: string; status: string; cause: string }[] };
+  alarms?: SectionError | { items: { name: string; state: string; reason: string; since: string | null; scaling: boolean }[] };
+  cost?: { lines: CostLine[]; per_hour: number; per_day: number; per_month: number; unknown: string[]; note: string };
+  budget?: SectionError | { name: string; limit: number | null; actual: number | null; forecast: number | null } | null;
+}
+
+export function sectionError(s: unknown): string | null {
+  return s && typeof s === "object" && "error" in s ? (s as SectionError).error : null;
+}

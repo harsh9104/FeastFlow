@@ -4,6 +4,7 @@ import { useCart } from "../cart";
 import {
   IconBag,
   IconBike,
+  IconCloud,
   IconCrown,
   IconGrid,
   IconLogout,
@@ -91,6 +92,7 @@ function AdminLayout() {
     { to: "/admin/festival", label: "Festival day", icon: <IconParty /> },
     { to: "/admin/menu", label: "Menu", icon: <IconMenu /> },
     { to: "/admin/users", label: "Customers", icon: <IconUsers /> },
+    { to: "/admin/cloud", label: "Cloud & cost", icon: <IconCloud /> },
   ];
   return (
     <div className="shell admin">

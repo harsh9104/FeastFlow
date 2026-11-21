@@ -53,7 +53,13 @@ def queue_url(name: str) -> str:
     return sqs().get_queue_url(QueueName=name)["QueueUrl"]
 
 
+@lru_cache
+def service(name: str):
+    """Any other client (autoscaling, cloudwatch, rds, ec2, elbv2, budgets, sts), cached."""
+    return client(name)
+
+
 def reset_clients() -> None:
     """Tests call this so each test gets clients bound to a fresh moto mock."""
-    for fn in (sqs, s3, s3_presigner, sns, topic_arn, queue_url):
+    for fn in (sqs, s3, s3_presigner, sns, topic_arn, queue_url, service):
         fn.cache_clear()

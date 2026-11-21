@@ -3,6 +3,7 @@ from pathlib import Path
 from fastapi import FastAPI, Request
 
 from app.api import (
+    admin_cloud,
     admin_dispatch,
     admin_festival,
     admin_menu,
@@ -38,6 +39,7 @@ def create_app() -> FastAPI:
     app.include_router(admin_menu.router)
     app.include_router(admin_dispatch.router)
     app.include_router(admin_festival.router)
+    app.include_router(admin_cloud.router)
     # Last, so the catch-all never shadows an API route.
     mount_spa(app, Path(s.static_dir))
     return app

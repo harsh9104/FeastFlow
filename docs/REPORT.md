@@ -152,6 +152,20 @@ and connections, and memory.
 Alarms email the admin through SNS. The ASG's own scaling alarms (created by the target-tracking policy)
 are separate and act automatically.
 
+**Cloud & cost panel in the admin dashboard.** The admin site has its own *Cloud & cost* page
+(`GET /api/admin/cloud`), so the scaling story can be shown without opening the AWS Console. It reads,
+through the instance role:
+- the Auto Scaling Group: servers with zone, state and health, min / desired / max, the 60 % CPU target;
+- CloudWatch: average CPU and servers in service for the last hour (two charts on the same time axis),
+  and every FeastFlow alarm plus the ASG's own scaling alarms, firing ones first;
+- the ASG's scaling activity history (launches and terminations with their cause);
+- an hourly **cost estimate** built from what is running right now (app servers, ALB, RDS running or
+  stopped, Locust, public IPv4 addresses) at us-east-1 list prices, projected to a work day, a day and a
+  month, next to the actual spend from AWS Budgets.
+
+Each AWS read is separate, so if the lab refuses one call only that part of the page is missing.
+Results are cached for 15 s per instance so several open admin tabs don't flood the AWS APIs.
+
 ## 7. Test results
 
 ### 7.1 Order flow on AWS

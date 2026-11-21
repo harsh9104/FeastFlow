@@ -819,3 +819,35 @@ input[type="range"] { padding: 0; accent-color: var(--brand); box-shadow: none !
   .route-end { width: 38px; height: 38px; font-size: 1.3rem; }
   .progress li .label { font-size: 0.68rem; }
 }
+
+/* ---- admin Cloud & cost ---- */
+.cloud-meta { margin: 0; align-self: flex-end; }
+.cloud-section { margin-top: 18px; }
+.cloud-charts h2, .cloud-section h2 { margin-bottom: 2px; }
+.chart { position: relative; margin-top: 8px; }
+.chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+.chart-grid { stroke: var(--border); stroke-width: 1; }
+.chart-axis { fill: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.chart-threshold { stroke: var(--danger); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.chart-cross { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 3; }
+.chart-tip { position: absolute; top: -6px; transform: translateX(-50%); background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow); border-radius: 10px; padding: 5px 10px; font-size: 0.8rem; white-space: nowrap; pointer-events: none; }
+.chart-empty { padding: 30px 0; text-align: center; }
+.badge.cloud-ok { background: var(--ok-soft); color: var(--ok); }
+.badge.cloud-bad { background: var(--danger-soft); color: var(--danger); }
+.badge.cloud-warn { background: var(--warn-soft); color: var(--warn); }
+.badge.cloud-idle { background: var(--surface-2); color: var(--muted); }
+.badge.cloud-here { background: var(--info-soft); color: var(--info); margin-left: 8px; }
+.cloud-activity { list-style: none; margin: 0; padding: 0; }
+.cloud-activity li { padding: 10px 0; border-bottom: 1px solid var(--border); }
+.cloud-activity li:last-child { border-bottom: 0; }
+.cloud-cause { margin: 4px 0 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cloud-proj { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 8px 0 14px; }
+.cloud-proj > div { display: flex; flex-direction: column; gap: 2px; background: var(--surface-2); border-radius: var(--radius-sm); padding: 10px 12px; }
+.cloud-proj strong { font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+.cloud-budget-line { margin: 0 0 8px; }
+.meter { height: 10px; border-radius: 999px; background: var(--surface-3); overflow: hidden; }
+.meter > span { display: block; height: 100%; border-radius: 999px; background: var(--grad); }
+.table tfoot th { border-bottom: 0; padding-top: 12px; }
+@media (max-width: 640px) {
+  .cloud-proj { grid-template-columns: 1fr; }
+}

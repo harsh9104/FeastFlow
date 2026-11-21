@@ -51,6 +51,15 @@ class Settings(BaseSettings):
     # own --host (docker compose passes http://api:8000).
     loadtest_target: str | None = None
 
+    # ---- admin Cloud & Cost panel (AWS only; unset locally = panel says "not on AWS") ----
+    asg_name: str | None = None
+    alb_name: str | None = None
+    rds_instance_id: str | None = None
+    locust_instance_id: str | None = None
+    budget_name: str | None = None
+    # Every admin tab polls the panel; one AWS read per instance per this many seconds.
+    cloud_cache_seconds: float = 15
+
     # Built React app (copied in by the Dockerfile). Missing = API only.
     static_dir: str = "static"
 

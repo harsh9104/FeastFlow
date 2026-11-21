@@ -61,6 +61,7 @@ Log out, log in as the admin (incognito window is easiest).
 | **EC2 → Target Groups → feastflow-tg → Targets**: 2-4 rows, all healthy | **15-targets-healthy.png** |
 | **Load balancing proof**: open `/api/health` on the site and press F5 a few times, the `instance` value changes. Or in Git Bash run the line below | **16-load-balancing.png** |
 | The rush ends ~14 min after Start. About 13 min later the instances go back to 1 | **17-asg-scale-in.png** (Activity: "Terminating") and **18-dashboard-full.png** |
+| During the rush, Admin → **Cloud & cost**: 2-3 servers, CPU chart above the dashed 60 % line, "Launching a new EC2 instance" in Scaling activity, cost per hour | **29-cloud-panel.png** |
 | **Then clean up** the thousands of load-test orders (Git Bash): `./clear-test-orders.sh` | (no screenshot) |
 
 What to expect (measured on 21 Nov): scale-out to 2 about 5 min after Start, to 3 about 8 min after

@@ -5,6 +5,7 @@ import { Layout } from "./components/Layout";
 import { Loading } from "./components/ui";
 import { AdminMenu } from "./pages/admin/AdminMenu";
 import { Board } from "./pages/admin/Board";
+import { Cloud } from "./pages/admin/Cloud";
 import { Customers } from "./pages/admin/Customers";
 import { Festival } from "./pages/admin/Festival";
 import { Partners } from "./pages/admin/Partners";
@@ -50,6 +51,7 @@ export function App() {
         <Route path="admin/festival" element={<RequireUser role="ADMIN"><Festival /></RequireUser>} />
         <Route path="admin/menu" element={<RequireUser role="ADMIN"><AdminMenu /></RequireUser>} />
         <Route path="admin/users" element={<RequireUser role="ADMIN"><Customers /></RequireUser>} />
+        <Route path="admin/cloud" element={<RequireUser role="ADMIN"><Cloud /></RequireUser>} />
         <Route path="*" element={<div className="empty">Page not found.</div>} />
       </Route>
     </Routes>

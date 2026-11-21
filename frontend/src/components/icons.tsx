@@ -54,3 +54,6 @@ export const IconUsers = () => (
 export const IconLogout = () => (
   <svg {...base}><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10" /></svg>
 );
+export const IconCloud = () => (
+  <svg {...base}><path d="M7 18h10a4 4 0 0 0 .6-7.96A6 6 0 0 0 6.1 9.2 4.5 4.5 0 0 0 7 18Z" /></svg>
+);

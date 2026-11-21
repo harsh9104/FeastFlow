@@ -9,7 +9,6 @@
 source "$(dirname "${BASH_SOURCE[0]}")/00-env.sh"
 : "${ALERT_EMAIL:?set ALERT_EMAIL=you@example.com}"
 
-BUDGET_NAME="feastflow-monthly"
 BUDGET_USD="${BUDGET_USD:-50}"
 BUDGET="{\"BudgetName\":\"$BUDGET_NAME\",\"BudgetType\":\"COST\",\"TimeUnit\":\"MONTHLY\",\"BudgetLimit\":{\"Amount\":\"$BUDGET_USD\",\"Unit\":\"USD\"}}"
 SUBSCRIBER="SubscriptionType=EMAIL,Address=$ALERT_EMAIL"
