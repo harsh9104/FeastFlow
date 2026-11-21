@@ -156,8 +156,7 @@ are separate and act automatically.
 
 ### 7.1 Order flow on AWS
 An order placed on the live site went `PLACED → CONFIRMED → PREPARING → OUT_FOR_DELIVERY → DELIVERED`
-in about 70 seconds, through the real SQS queue and worker, with a rider assigned automatically.
-*(Screenshots 03, 04, 05.)*
+in about 70 seconds, through the real SQS queue and worker, with a rider assigned automatically. *(Figures 3-4.)*
 
 ### 7.2 Festival order burst: Prime priority under a rush
 **Setup:** 300 orders in 60 seconds, 30 % Prime, only 20 riders, so riders run out on purpose.
@@ -169,7 +168,8 @@ in about 70 seconds, through the real SQS queue and worker, with a rider assigne
 
 All 300 orders were created with **0 failures**. Prime orders waited about **3 times less** for a rider
 than standard orders and were delivered about 77 seconds sooner, while standard orders were still
-delivered (no starvation). *(Screenshots 10, 11.)*
+delivered (no starvation). *(Figures 14-16; a second burst run showed the same pattern: Prime 46.7 s
+vs standard 100 s waiting for a rider.)*
 
 ### 7.3 Load test, auto scaling and load balancing
 **Setup:** Locust on its own EC2, `festival` profile, 20 minutes: ramp to 300 users, peak of 450 users at
@@ -209,7 +209,7 @@ the queue. After the fix the system degraded gracefully and scaled exactly as de
 riders can deliver. `infra/scripts/clear-test-orders.sh` cancels leftover load-test orders so real
 customers aren't queued behind them.
 
-*(Screenshots 12-18.)*
+*(Console evidence: Appendix B.)*
 
 ## 8. Cost
 | Resource | Approx. cost per hour |
@@ -237,10 +237,68 @@ observable and cheap.
 **Possible improvements:** HTTPS with a domain and certificate (ACM), Multi-AZ RDS for high
 availability, scaling on queue depth as well as CPU, and SMS notifications.
 
-## Appendix: Screenshot list
-Screenshots are in `docs/screenshots/`, named as in `docs/DEMO-CHECKLIST.md`:
-01 home · 02 menu · 03 cart · 04 order delivered · 05 SNS email · 06 Prime · 07 Prime checkout ·
-08 admin board · 09 partners · 10 burst board · 11 Prime vs standard · 12 Locust running ·
-13 dashboard CPU · 14 ASG scale-out · 15 healthy targets · 16 load balancing · 17 ASG scale-in ·
-18 full dashboard · 19 SQS · 20 SNS · 21 RDS · 22 S3 · 23 ECR · 24 alarms · 25 logs ·
-26 Lambda + scheduler · 27 budget · 28 credit used.
+## Appendix A: Application screenshots (live AWS deployment, 21 Nov 2026)
+
+All captured from the site served by the ALB (`http://feastflow-alb-….elb.amazonaws.com`).
+
+### Customer side
+**Figure 1: Home page, restaurant list**
+![Home](screenshots/01-home.png)
+
+**Figure 2: Restaurant menu; dish photos are served from the private S3 bucket through presigned URLs**
+![Menu](screenshots/02-menu.png)
+
+**Figure 3: Cart and checkout**
+![Cart](screenshots/03-cart.png)
+
+**Figure 4: Order delivered: live timeline Placed → Confirmed → Preparing → Finding rider → On the way →
+Delivered, with the rider assigned automatically (the order went through SQS and the worker)**
+![Order delivered](screenshots/04-order-delivered.png)
+
+**Figure 5: Prime offer page**
+![Prime offer](screenshots/06a-prime-offer.png)
+
+**Figure 6: Prime active**
+![Prime active](screenshots/06-prime.png)
+
+**Figure 7: Checkout as a Prime member: "Prime priority is on"**
+![Prime checkout](screenshots/07-prime-checkout.png)
+
+**Figure 8: My orders**
+![My orders](screenshots/07b-my-orders.png)
+
+### Admin / dispatch side
+**Figure 9: Dispatch board**
+![Admin board](screenshots/08-admin-board.png)
+
+**Figure 10: Delivery partners**
+![Partners](screenshots/09-partners.png)
+
+**Figure 11: Menu management (prices, availability, photo upload to S3)**
+![Admin menu](screenshots/09b-admin-menu.png)
+
+**Figure 12: Customers**
+![Customers](screenshots/09c-customers.png)
+
+**Figure 13: Festival page: order burst and Locust load generator controls**
+![Festival page](screenshots/09d-festival-page.png)
+
+### Festival order burst (300 orders, 60 s, 30 % Prime, 20 riders)
+**Figure 14: Dispatch board during the burst: all 20 riders busy, Prime orders first in "Waiting for rider"**
+![Burst board](screenshots/10-burst-board.png)
+
+**Figure 15: Burst progress**
+![Burst progress](screenshots/10b-burst-progress.png)
+
+**Figure 16: Prime vs standard during the burst: Prime waited 46.7 s for a rider, standard 1 min 40 s**
+![Prime vs standard](screenshots/11-prime-vs-standard.png)
+
+**Figure 17: Festival runs history**
+![Festival runs](screenshots/11b-festival-runs.png)
+
+## Appendix B: AWS Console screenshots
+These are taken in the AWS Console during the next lab session (the console header shows the Learner
+Lab identity). Add them to `docs/screenshots/` with these names and they belong here:
+14 ASG activity (scale-out and scale-in) · 15 target group with healthy targets · 16 load balancing ·
+18 CloudWatch dashboard · 19 SQS · 20 SNS · 21 RDS · 22 S3 · 23 ECR · 24 alarms · 25 logs ·
+26 Lambda + scheduler · 27 budget · 28 Learner Lab credit used.
