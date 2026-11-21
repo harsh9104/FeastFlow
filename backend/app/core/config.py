@@ -8,6 +8,13 @@ class Settings(BaseSettings):
 
     app_env: str = "local"
     database_url: str = "mysql+pymysql://feastflow:feastflow@localhost:3306/feastflow"
+    # Per process. RDS db.t3.micro allows 61 connections: 4 instances x (api 12 + worker ~2)
+    # stays under it. api_max_concurrency must stay below pool size + overflow (see admission.py).
+    db_pool_size: int = 8
+    db_max_overflow: int = 4
+    db_pool_timeout: int = 10
+    api_max_concurrency: int = 10
+    api_queue_timeout: float = 10.0
     jwt_secret: str = "change-me"
     jwt_expire_minutes: int = 120
     # bcrypt work factor: 12 (~0.25 s per hash) in production; tests use 4.

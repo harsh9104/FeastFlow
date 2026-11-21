@@ -10,8 +10,9 @@ router = APIRouter(prefix="/api/health", tags=["health"])
 
 
 @router.get("")
-def liveness():
-    """Used by the ALB target group health check. No DB call, so a DB blip doesn't drain targets."""
+async def liveness():
+    """Used by the ALB target group health check. No DB call, so a DB blip doesn't drain targets.
+    async: runs on the event loop, so it answers even when every worker thread is busy."""
     return {"status": "ok", "instance": instance_id()}
 
 
