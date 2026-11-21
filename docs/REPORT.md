@@ -164,6 +164,9 @@ through the instance role:
   month, next to the actual spend from AWS Budgets.
 
 Each AWS read is separate, so if the lab refuses one call only that part of the page is missing.
+On the Learner Lab this happens with AWS Budgets: LabRole may not call `budgets:ViewBudget`, so the
+panel shows the estimate but not the actual spend (the budget and its email alerts still work, as they
+were set up with the lab user's own credentials).
 Results are cached for 15 s per instance so several open admin tabs don't flood the AWS APIs.
 
 ## 7. Test results

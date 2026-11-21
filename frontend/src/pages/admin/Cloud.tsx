@@ -181,7 +181,8 @@ export function Cloud() {
     ["CloudWatch metrics", data.metrics],
     ["Scaling activity", data.activities],
     ["Alarms", data.alarms],
-    ["Budget", data.budget],
+    // Budget is left out: Learner Lab's LabRole can't read AWS Budgets, so it would always show.
+    // The Budget card explains it on its own.
   ]
     .map(([name, s]) => (sectionError(s) ? `${name}: ${sectionError(s)}` : null))
     .filter(Boolean);
@@ -364,7 +365,10 @@ export function Cloud() {
             </>
           ) : (
             <p className="muted small">
-              {sectionError(data.budget) ? "AWS Budgets couldn't be read from the server." : "No budget configured."} The Learner Lab page shows the credit used.
+              {sectionError(data.budget)
+                ? "Actual spend isn't shown: the lab's server role isn't allowed to read AWS Budgets. The budget and its email alerts still work."
+                : "No budget configured."}{" "}
+              The Learner Lab page shows the credit used.
             </p>
           )}
           <p className="muted small">
