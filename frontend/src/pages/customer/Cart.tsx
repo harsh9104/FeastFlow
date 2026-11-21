@@ -7,7 +7,7 @@ import { useAuth } from "../../auth";
 import { useCart } from "../../cart";
 import { IconPin } from "../../components/icons";
 import { Alert, DishImage, Empty, VegMark } from "../../components/ui";
-import { money } from "../../format";
+import { money, uuid } from "../../format";
 
 const ADDRESS_KEY = "feastflow.address";
 
@@ -28,7 +28,7 @@ export function Cart() {
   const [busy, setBusy] = useState(false);
   // Same key for every retry of this checkout, so a double-click or a retry after a
   // network error can never create two orders. A new key only after success.
-  const idemKey = useRef<string>(crypto.randomUUID());
+  const idemKey = useRef<string>(uuid());
 
   if (cart.count === 0) {
     return (
@@ -63,7 +63,7 @@ export function Cart() {
         /* not essential */
       }
       cart.clear();
-      idemKey.current = crypto.randomUUID();
+      idemKey.current = uuid();
       navigate(`/orders/${order.id}`, { state: { justPlaced: true } });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Couldn't place the order");
