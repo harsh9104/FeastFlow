@@ -7,9 +7,12 @@ if [ "$STATUS" = "stopped" ]; then
   aws rds start-db-instance --db-instance-identifier "$DB_ID" >/dev/null
   log "starting RDS..."
 elif [ "$STATUS" = "stopping" ]; then
-  log "RDS is still stopping; waiting for it, then starting it"
-  aws rds wait db-instance-stopped --db-instance-identifier "$DB_ID" 2>/dev/null || true
+  log "RDS is still stopping; waiting for it (a few minutes), then starting it"
+  # The CLI has no db-instance-stopped waiter, so poll.
+  until [ "$(aws rds describe-db-instances --db-instance-identifier "$DB_ID" \
+      --query 'DBInstances[0].DBInstanceStatus' --output text)" = "stopped" ]; do sleep 20; done
   aws rds start-db-instance --db-instance-identifier "$DB_ID" >/dev/null
+  log "starting RDS..."
 fi
 aws rds wait db-instance-available --db-instance-identifier "$DB_ID"
 log "RDS available"
