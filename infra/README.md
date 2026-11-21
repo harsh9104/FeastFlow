@@ -34,6 +34,7 @@ That file is git-ignored; keep it, the scripts need it.
 | Park everything (ASG → 0, Locust + RDS stopped) | `./stop.sh` |
 | Resume | `./start.sh` (site back ~5 min after RDS is up) |
 | Ship new code | `./02b-push-image.sh && ./redeploy.sh` |
+| After a Locust load test (cancels leftover load-test orders) | `./clear-test-orders.sh` |
 | Change app settings (env vars) | edit `05`, re-run it, then `./redeploy.sh` |
 | Delete everything after grading | `CONFIRM=yes ./99-teardown.sh` |
 
