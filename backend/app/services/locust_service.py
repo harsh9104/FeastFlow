@@ -34,7 +34,11 @@ def _call(method: str, path: str, **kwargs) -> httpx.Response:
 def start(profile: str) -> dict:
     # The profile is a custom Locust argument (see loadtest/locustfile.py); the shape
     # class reads it and drives the user count, so user_count/spawn_rate are placeholders.
-    _call("POST", "/swarm", data={"user_count": 1, "spawn_rate": 1, "profile": profile})
+    data = {"user_count": 1, "spawn_rate": 1, "profile": profile}
+    target = get_settings().loadtest_target
+    if target:
+        data["host"] = target.rstrip("/")  # on AWS: the ALB, so traffic is load-balanced
+    _call("POST", "/swarm", data=data)
     return status_()
 
 

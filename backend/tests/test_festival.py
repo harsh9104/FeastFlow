@@ -230,11 +230,29 @@ def test_loadtest_proxy(client, db, monkeypatch):
     assert (body["users"], body["rps"], body["p95_ms"], body["failures"]) == (300, 142.4, 240, 31)
     assert calls[0][0:2] == ("POST", "http://locust:8089/swarm")
     assert calls[0][2]["profile"] == "festival"
+    assert "host" not in calls[0][2]  # no LOADTEST_TARGET: Locust keeps its own --host
 
     client.post("/api/admin/loadtest/stop", headers=h)
     assert ("GET", "http://locust:8089/stop", None) in calls
     bad = client.post("/api/admin/loadtest/start", json={"profile": "huge"}, headers=h)
     assert bad.status_code == 422
+
+
+def test_loadtest_sends_target(client, db, monkeypatch):
+    monkeypatch.setenv("LOCUST_URL", "http://locust:8089")
+    monkeypatch.setenv("LOADTEST_TARGET", "http://feastflow-alb.example.com/")
+    get_settings.cache_clear()
+    calls = []
+
+    def fake_request(method, url, **kwargs):
+        calls.append(kwargs.get("data"))
+        return httpx.Response(200, json=LOCUST_STATS, request=httpx.Request(method, url))
+
+    monkeypatch.setattr(httpx, "request", fake_request)
+    res = client.post("/api/admin/loadtest/start", json={"profile": "normal"},
+                      headers=admin(client, db))
+    assert res.status_code == 200
+    assert calls[0]["host"] == "http://feastflow-alb.example.com"
 
 
 def test_loadtest_unreachable(client, db, monkeypatch):

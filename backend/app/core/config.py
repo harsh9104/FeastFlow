@@ -40,6 +40,9 @@ class Settings(BaseSettings):
     festival_max_orders: int = 5000
     # Locust web API on the load-generator EC2, e.g. http://10.0.1.23:8089
     locust_url: str | None = None
+    # Site Locust should hit, sent with each start, e.g. http://<alb-dns>. Unset = Locust's
+    # own --host (docker compose passes http://api:8000).
+    loadtest_target: str | None = None
 
     # Built React app (copied in by the Dockerfile). Missing = API only.
     static_dir: str = "static"
