@@ -3,6 +3,7 @@
 Revision ID: 0006
 Revises: 0005
 """
+
 import sqlalchemy as sa
 from alembic import op
 
@@ -22,29 +23,38 @@ BESTSELLERS = [2, 1, 6, 12, 16]
 
 
 def upgrade() -> None:
-    op.add_column("restaurants", sa.Column("rating", sa.Numeric(2, 1), nullable=False,
-                                           server_default="4.2"))
-    op.add_column("restaurants", sa.Column("delivery_minutes", sa.Integer, nullable=False,
-                                           server_default="30"))
-    op.add_column("restaurants", sa.Column("cost_for_two", sa.Integer, nullable=False,
-                                           server_default="400"))
+    op.add_column(
+        "restaurants", sa.Column("rating", sa.Numeric(2, 1), nullable=False, server_default="4.2")
+    )
+    op.add_column(
+        "restaurants",
+        sa.Column("delivery_minutes", sa.Integer, nullable=False, server_default="30"),
+    )
+    op.add_column(
+        "restaurants", sa.Column("cost_for_two", sa.Integer, nullable=False, server_default="400")
+    )
     op.add_column("restaurants", sa.Column("offer", sa.String(60)))
-    op.add_column("menu_items", sa.Column("is_bestseller", sa.Boolean, nullable=False,
-                                          server_default="0"))
+    op.add_column(
+        "menu_items", sa.Column("is_bestseller", sa.Boolean, nullable=False, server_default="0")
+    )
 
     restaurants = sa.table(
         "restaurants",
-        sa.column("id", sa.Integer), sa.column("rating", sa.Numeric),
-        sa.column("delivery_minutes", sa.Integer), sa.column("cost_for_two", sa.Integer),
+        sa.column("id", sa.Integer),
+        sa.column("rating", sa.Numeric),
+        sa.column("delivery_minutes", sa.Integer),
+        sa.column("cost_for_two", sa.Integer),
         sa.column("offer", sa.String),
     )
     for rid, (rating, minutes, cost, offer) in DETAILS.items():
         op.execute(
-            restaurants.update().where(restaurants.c.id == rid).values(
-                rating=rating, delivery_minutes=minutes, cost_for_two=cost, offer=offer
-            )
+            restaurants.update()
+            .where(restaurants.c.id == rid)
+            .values(rating=rating, delivery_minutes=minutes, cost_for_two=cost, offer=offer)
         )
-    items = sa.table("menu_items", sa.column("id", sa.Integer), sa.column("is_bestseller", sa.Boolean))
+    items = sa.table(
+        "menu_items", sa.column("id", sa.Integer), sa.column("is_bestseller", sa.Boolean)
+    )
     op.execute(items.update().where(items.c.id.in_(BESTSELLERS)).values(is_bestseller=True))
 
 

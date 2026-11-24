@@ -32,8 +32,10 @@ def place(db, user, item=1) -> Order:
 
 
 def partners(db, n=1, status="AVAILABLE") -> list[DeliveryPartner]:
-    ps = [DeliveryPartner(name=f"Rider {i}", phone=f"+9190000{i:05d}", status=status)
-          for i in range(n)]
+    ps = [
+        DeliveryPartner(name=f"Rider {i}", phone=f"+9190000{i:05d}", status=status)
+        for i in range(n)
+    ]
     db.add_all(ps)
     db.commit()
     return ps
@@ -87,8 +89,14 @@ def test_full_lifecycle_with_timers(db, menu):
     assert (rider.status, rider.deliveries_count) == ("AVAILABLE", 1)
 
     timeline = [e.status for e in order_service.get_order(db, order.id).events]
-    assert timeline == ["PLACED", "CONFIRMED", "PREPARING", "AWAITING_PARTNER",
-                        "OUT_FOR_DELIVERY", "DELIVERED"]
+    assert timeline == [
+        "PLACED",
+        "CONFIRMED",
+        "PREPARING",
+        "AWAITING_PARTNER",
+        "OUT_FOR_DELIVERY",
+        "DELIVERED",
+    ]
 
 
 def test_confirm_is_idempotent_and_ignores_unknown_orders(db, menu):
@@ -226,24 +234,31 @@ def test_consumer_leaves_malformed_messages_for_the_dlq(db):
 def _inbox_for(user_id: int) -> str:
     """An SQS queue subscribed with the same filter policy a customer's email gets."""
     url = aws.sqs().create_queue(QueueName=f"inbox-{user_id}")["QueueUrl"]
-    arn = aws.sqs().get_queue_attributes(QueueUrl=url, AttributeNames=["QueueArn"])[
-        "Attributes"]["QueueArn"]
+    arn = aws.sqs().get_queue_attributes(QueueUrl=url, AttributeNames=["QueueArn"])["Attributes"][
+        "QueueArn"
+    ]
     aws.sns().subscribe(
-        TopicArn=aws.topic_arn(), Protocol="sqs", Endpoint=arn,
-        Attributes={"FilterPolicy": json.dumps({"user_id": [str(user_id)]}),
-                    "RawMessageDelivery": "true"},
+        TopicArn=aws.topic_arn(),
+        Protocol="sqs",
+        Endpoint=arn,
+        Attributes={
+            "FilterPolicy": json.dumps({"user_id": [str(user_id)]}),
+            "RawMessageDelivery": "true",
+        },
     )
     return url
 
 
 def test_customers_only_receive_their_own_notifications():
     inbox = _inbox_for(1)
-    sent = notification_service.publish([
-        notification_service.Notice(10, 1, "CONFIRMED"),
-        notification_service.Notice(11, 2, "CONFIRMED"),  # someone else
-        notification_service.Notice(12, 1, "PREPARING"),  # not a notifying status
-        notification_service.Notice(13, 1, "DELIVERED", is_synthetic=True),  # festival sim
-    ])
+    sent = notification_service.publish(
+        [
+            notification_service.Notice(10, 1, "CONFIRMED"),
+            notification_service.Notice(11, 2, "CONFIRMED"),  # someone else
+            notification_service.Notice(12, 1, "PREPARING"),  # not a notifying status
+            notification_service.Notice(13, 1, "DELIVERED", is_synthetic=True),  # festival sim
+        ]
+    )
     assert sent == 2
     msgs = aws.sqs().receive_message(QueueUrl=inbox, MaxNumberOfMessages=10)["Messages"]
     assert [m["Body"] for m in msgs] == [
@@ -284,12 +299,14 @@ def test_order_board_lists_active_orders_prime_first(client, db, menu):
 
 def test_partner_management(client, db, menu):
     h = admin_headers(client, db)
-    res = client.post("/api/admin/partners", json={"name": "New Rider", "phone": "+919876543210"},
-                      headers=h)
+    res = client.post(
+        "/api/admin/partners", json={"name": "New Rider", "phone": "+919876543210"}, headers=h
+    )
     assert res.status_code == 201 and res.json()["status"] == "AVAILABLE"
     pid = res.json()["id"]
-    dup = client.post("/api/admin/partners", json={"name": "Dup Rider", "phone": "+919876543210"},
-                      headers=h)
+    dup = client.post(
+        "/api/admin/partners", json={"name": "Dup Rider", "phone": "+919876543210"}, headers=h
+    )
     assert dup.status_code == 409
 
     off = client.patch(f"/api/admin/partners/{pid}", json={"status": "OFFLINE"}, headers=h)

@@ -51,9 +51,7 @@ def festival_runs(_: User = Depends(require_admin), db: Session = Depends(get_db
     return festival_service.list_runs(db)
 
 
-@router.post(
-    "/festival/runs", response_model=FestivalRunOut, status_code=status.HTTP_202_ACCEPTED
-)
+@router.post("/festival/runs", response_model=FestivalRunOut, status_code=status.HTTP_202_ACCEPTED)
 def start_festival_run(
     body: FestivalRunIn, admin: User = Depends(require_admin), db: Session = Depends(get_db)
 ):

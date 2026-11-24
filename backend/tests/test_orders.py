@@ -142,8 +142,7 @@ def test_auth_rules_for_orders(client, db, menu):
     assert client.post("/api/orders", json=order_body((1, 1))).status_code == 401
     admin = admin_token(client, db)
     assert (
-        client.post("/api/orders", json=order_body((1, 1)), headers=auth(admin)).status_code
-        == 403
+        client.post("/api/orders", json=order_body((1, 1)), headers=auth(admin)).status_code == 403
     )
 
 
@@ -182,9 +181,7 @@ def test_admin_can_upload_image_and_toggle_availability(client, db, menu):
     assert res.status_code == 200, res.text
     assert "menu/2-" in res.json()["image_url"]
 
-    res = client.patch(
-        "/api/admin/menu-items/2", json={"is_available": False}, headers=auth(admin)
-    )
+    res = client.patch("/api/admin/menu-items/2", json={"is_available": False}, headers=auth(admin))
     assert res.json()["is_available"] is False
 
 

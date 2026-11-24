@@ -108,7 +108,10 @@ def test_festival_run_creates_orders_with_exact_prime_share(
     db.expire_all()
     run = db.get(FestivalRun, res.json()["id"])
     assert (run.status, run.created_orders, run.prime_orders, run.failed_orders) == (
-        "COMPLETED", 40, 10, 0,
+        "COMPLETED",
+        40,
+        10,
+        0,
     )
     orders = db.query(Order).all()
     assert len(orders) == 40 and all(o.is_synthetic for o in orders)
@@ -183,8 +186,11 @@ def test_run_on_dead_instance_is_reported_failed(client, db, menu, test_users):
 
 def test_festival_validation(client, db, menu):
     h = admin(client, db)
-    too_many = {"orders": get_settings().festival_max_orders + 1, "duration_seconds": 0,
-                "prime_percent": 10}
+    too_many = {
+        "orders": get_settings().festival_max_orders + 1,
+        "duration_seconds": 0,
+        "prime_percent": 10,
+    }
     assert client.post("/api/admin/festival/runs", json=too_many, headers=h).status_code == 422
     bad_pct = {"orders": 5, "duration_seconds": 0, "prime_percent": 101}
     assert client.post("/api/admin/festival/runs", json=bad_pct, headers=h).status_code == 422
@@ -199,12 +205,18 @@ def test_festival_validation(client, db, menu):
 # ---- Locust control ---------------------------------------------------------------
 
 LOCUST_STATS = {
-    "state": "running", "user_count": 300, "total_rps": 142.37, "total_fail_per_sec": 0.5,
+    "state": "running",
+    "user_count": 300,
+    "total_rps": 142.37,
+    "total_fail_per_sec": 0.5,
     "fail_ratio": 0.0035,
-    "stats": [{"name": "Aggregated", "num_requests": 9000, "num_failures": 31,
-               "avg_response_time": 85.4}],
-    "current_response_time_percentiles": {"response_time_percentile_0.5": 60,
-                                          "response_time_percentile_0.95": 240},
+    "stats": [
+        {"name": "Aggregated", "num_requests": 9000, "num_failures": 31, "avg_response_time": 85.4}
+    ],
+    "current_response_time_percentiles": {
+        "response_time_percentile_0.5": 60,
+        "response_time_percentile_0.95": 240,
+    },
     "errors": [],
 }
 
@@ -249,8 +261,9 @@ def test_loadtest_sends_target(client, db, monkeypatch):
         return httpx.Response(200, json=LOCUST_STATS, request=httpx.Request(method, url))
 
     monkeypatch.setattr(httpx, "request", fake_request)
-    res = client.post("/api/admin/loadtest/start", json={"profile": "normal"},
-                      headers=admin(client, db))
+    res = client.post(
+        "/api/admin/loadtest/start", json={"profile": "normal"}, headers=admin(client, db)
+    )
     assert res.status_code == 200
     assert calls[0]["host"] == "http://feastflow-alb.example.com"
 

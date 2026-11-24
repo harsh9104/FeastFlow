@@ -3,6 +3,7 @@
 Revision ID: 0003
 Revises: 0002
 """
+
 import sqlalchemy as sa
 from alembic import op
 
@@ -20,7 +21,15 @@ RESTAURANTS = [
 
 # (id, restaurant_id, name, category, is_veg, price, description)
 ITEMS = [
-    (1, 1, "Paneer Butter Masala", "Main Course", True, 249, "Cottage cheese in a rich tomato gravy"),
+    (
+        1,
+        1,
+        "Paneer Butter Masala",
+        "Main Course",
+        True,
+        249,
+        "Cottage cheese in a rich tomato gravy",
+    ),
     (2, 1, "Chicken Biryani", "Main Course", False, 299, "Dum-cooked basmati with spiced chicken"),
     (3, 1, "Dal Makhani", "Main Course", True, 199, "Slow-cooked black lentils with butter"),
     (4, 1, "Butter Naan", "Breads", True, 49, "Tandoor-baked flatbread"),
@@ -63,7 +72,8 @@ def upgrade() -> None:
         sa.column("image_key", sa.String),
     )
     op.bulk_insert(
-        restaurants, [dict(zip(("id", "name", "area", "cuisine"), r, strict=True)) for r in RESTAURANTS]
+        restaurants,
+        [dict(zip(("id", "name", "area", "cuisine"), r, strict=True)) for r in RESTAURANTS],
     )
     op.bulk_insert(
         items,

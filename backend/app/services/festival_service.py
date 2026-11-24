@@ -26,8 +26,15 @@ log = logging.getLogger(__name__)
 
 STALE_AFTER = timedelta(seconds=30)  # no heartbeat for this long = instance died
 CHECK_EVERY = 20  # orders between cancel checks / progress saves
-ADDRESSES = ["MG Road", "Koramangala 5th Block", "Indiranagar 100ft Rd", "HSR Sector 2",
-             "Whitefield Main Rd", "Jayanagar 4th Block", "Electronic City Ph 1"]
+ADDRESSES = [
+    "MG Road",
+    "Koramangala 5th Block",
+    "Indiranagar 100ft Rd",
+    "HSR Sector 2",
+    "Whitefield Main Rd",
+    "Jayanagar 4th Block",
+    "Electronic City Ph 1",
+]
 
 
 def _expire_stale(db: Session) -> None:

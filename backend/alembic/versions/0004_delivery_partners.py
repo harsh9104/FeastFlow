@@ -3,6 +3,7 @@
 Revision ID: 0004
 Revises: 0003
 """
+
 import sqlalchemy as sa
 from alembic import op
 
@@ -11,8 +12,28 @@ down_revision = "0003"
 branch_labels = None
 depends_on = None
 
-FIRST = ["Arjun", "Priya", "Rahul", "Sneha", "Vikram", "Ananya", "Karan", "Meera", "Rohit", "Divya",
-         "Aditya", "Pooja", "Sanjay", "Kavya", "Nikhil", "Isha", "Manish", "Riya", "Suresh", "Neha"]
+FIRST = [
+    "Arjun",
+    "Priya",
+    "Rahul",
+    "Sneha",
+    "Vikram",
+    "Ananya",
+    "Karan",
+    "Meera",
+    "Rohit",
+    "Divya",
+    "Aditya",
+    "Pooja",
+    "Sanjay",
+    "Kavya",
+    "Nikhil",
+    "Isha",
+    "Manish",
+    "Riya",
+    "Suresh",
+    "Neha",
+]
 LAST = ["Sharma", "Patel", "Reddy", "Iyer", "Singh", "Nair", "Gupta", "Joshi", "Rao", "Mehta"]
 
 
@@ -43,7 +64,11 @@ def upgrade() -> None:
     op.add_column("orders", sa.Column("stage_due_at", sa.DateTime))
     op.add_column("orders", sa.Column("partner_id", sa.Integer))
     op.create_foreign_key(
-        "fk_orders_partner", "orders", "delivery_partners", ["partner_id"], ["id"],
+        "fk_orders_partner",
+        "orders",
+        "delivery_partners",
+        ["partner_id"],
+        ["id"],
         ondelete="SET NULL",
     )
     op.create_index("ix_orders_status_due", "orders", ["status", "stage_due_at"])
@@ -57,7 +82,11 @@ def upgrade() -> None:
     op.bulk_insert(
         partners,
         [
-            {"id": i + 1, "name": f"{first} {LAST[i % len(LAST)]}", "phone": f"+91900000{i + 1:04d}"}
+            {
+                "id": i + 1,
+                "name": f"{first} {LAST[i % len(LAST)]}",
+                "phone": f"+91900000{i + 1:04d}",
+            }
             for i, first in enumerate(FIRST)
         ],
     )

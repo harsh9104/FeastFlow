@@ -48,13 +48,15 @@ class AdmissionLimit:
 
 async def _busy(send) -> None:
     body = json.dumps({"detail": "Server busy, please retry"}).encode()
-    await send({
-        "type": "http.response.start",
-        "status": 503,
-        "headers": [
-            (b"content-type", b"application/json"),
-            (b"content-length", str(len(body)).encode()),
-            (b"retry-after", b"1"),
-        ],
-    })
+    await send(
+        {
+            "type": "http.response.start",
+            "status": 503,
+            "headers": [
+                (b"content-type", b"application/json"),
+                (b"content-length", str(len(body)).encode()),
+                (b"retry-after", b"1"),
+            ],
+        }
+    )
     await send({"type": "http.response.body", "body": body})

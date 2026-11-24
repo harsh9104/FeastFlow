@@ -55,6 +55,7 @@ def fake_aws():
         yield
     aws.reset_clients()
 
+
 _url = os.getenv("TEST_DATABASE_URL", "sqlite://")
 _kwargs = {"connect_args": {"check_same_thread": False}, "poolclass": StaticPool}
 engine = create_engine(_url, **(_kwargs if _url.startswith("sqlite") else {}))
@@ -98,11 +99,23 @@ def menu(db):
         [
             Restaurant(id=1, name="Spice Route", area="MG Road", cuisine="North Indian"),
             Restaurant(id=2, name="Dosa Junction", area="Koramangala", cuisine="South Indian"),
-            MenuItem(id=1, restaurant_id=1, name="Paneer", category="Main", price=250,
-                     image_key="menu/1.svg"),
+            MenuItem(
+                id=1,
+                restaurant_id=1,
+                name="Paneer",
+                category="Main",
+                price=250,
+                image_key="menu/1.svg",
+            ),
             MenuItem(id=2, restaurant_id=1, name="Naan", category="Breads", price=50),
-            MenuItem(id=3, restaurant_id=1, name="Kulfi", category="Desserts", price=90,
-                     is_available=False),
+            MenuItem(
+                id=3,
+                restaurant_id=1,
+                name="Kulfi",
+                category="Desserts",
+                price=90,
+                is_available=False,
+            ),
             MenuItem(id=4, restaurant_id=2, name="Dosa", category="Dosa", price=130),
         ]
     )

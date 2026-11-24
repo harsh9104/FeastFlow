@@ -165,8 +165,12 @@ def dispatch_stats(
     since = utcnow() - timedelta(minutes=window_minutes)
     rows = db.execute(
         select(
-            Order.priority, Order.created_at, Order.confirmed_at, Order.ready_at,
-            Order.assigned_at, Order.delivered_at,
+            Order.priority,
+            Order.created_at,
+            Order.confirmed_at,
+            Order.ready_at,
+            Order.assigned_at,
+            Order.delivered_at,
         )
         .where(Order.created_at >= since)
         .limit(20000)

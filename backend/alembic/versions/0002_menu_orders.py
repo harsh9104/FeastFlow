@@ -3,6 +3,7 @@
 Revision ID: 0002
 Revises: 0001
 """
+
 import sqlalchemy as sa
 from alembic import op
 
@@ -11,7 +12,9 @@ down_revision = "0001"
 branch_labels = None
 depends_on = None
 
-STATUSES = "'PLACED','CONFIRMED','PREPARING','AWAITING_PARTNER','OUT_FOR_DELIVERY','DELIVERED','CANCELLED'"
+STATUSES = (
+    "'PLACED','CONFIRMED','PREPARING','AWAITING_PARTNER','OUT_FOR_DELIVERY','DELIVERED','CANCELLED'"
+)
 
 
 def upgrade() -> None:

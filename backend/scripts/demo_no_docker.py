@@ -93,12 +93,32 @@ def setup() -> None:
     with SessionLocal() as db:
         for rid, name, area, cuisine in menu.RESTAURANTS:
             rating, minutes, cost, offer = details.DETAILS[rid]
-            db.add(Restaurant(id=rid, name=name, area=area, cuisine=cuisine, rating=rating,
-                              delivery_minutes=minutes, cost_for_two=cost, offer=offer))
+            db.add(
+                Restaurant(
+                    id=rid,
+                    name=name,
+                    area=area,
+                    cuisine=cuisine,
+                    rating=rating,
+                    delivery_minutes=minutes,
+                    cost_for_two=cost,
+                    offer=offer,
+                )
+            )
         for iid, rid, name, cat, veg, price, desc in menu.ITEMS:
-            db.add(MenuItem(id=iid, restaurant_id=rid, name=name, category=cat, is_veg=veg,
-                            price=price, description=desc, image_key=f"menu/{iid}.svg",
-                            is_bestseller=iid in details.BESTSELLERS))
+            db.add(
+                MenuItem(
+                    id=iid,
+                    restaurant_id=rid,
+                    name=name,
+                    category=cat,
+                    is_veg=veg,
+                    price=price,
+                    description=desc,
+                    image_key=f"menu/{iid}.svg",
+                    is_bestseller=iid in details.BESTSELLERS,
+                )
+            )
         for i, first in enumerate(partners.FIRST):
             last = partners.LAST[i % len(partners.LAST)]
             db.add(DeliveryPartner(name=f"{first} {last}", phone=f"+91900000{i + 1:04d}"))
@@ -115,8 +135,17 @@ def start_locust() -> None:
         print("Locust not installed in loadtest/.venv; the load generator panel stays offline.")
         return
     proc = subprocess.Popen(
-        [str(exe), "-f", str(REPO / "loadtest" / "locustfile.py"),
-         "--host", "http://127.0.0.1:8000", "--web-host", "127.0.0.1", "--web-port", "8089"],
+        [
+            str(exe),
+            "-f",
+            str(REPO / "loadtest" / "locustfile.py"),
+            "--host",
+            "http://127.0.0.1:8000",
+            "--web-host",
+            "127.0.0.1",
+            "--web-port",
+            "8089",
+        ],
         env={**os.environ, "LOADTEST_USERS": str(get_settings().loadtest_users)},
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
