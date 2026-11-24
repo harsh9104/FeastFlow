@@ -271,6 +271,13 @@ instance turned healthy at 01:09, and no instance crashed. Both runs show the sa
 about 5-6 minutes after load rises, scale-in about 15 minutes after it drops, and response time back
 near 100 ms once the new instances are in service.
 
+**Third run (25 Nov 2026, times IST), recorded in the AWS Console (Appendix B):** the stack was
+started at 01:27, the `festival` Locust profile and a 5,000-order burst (35 % Prime) at about 01:40.
+CPU passed the 60 % target and peaked at about 75 %. The group scaled 1 → 2 at about 01:43 and
+2 → 3 at about 01:48. At 01:49 two targets were healthy and requests alternated between them; at 01:54
+all 3 servers were in service. After the rush, the group scaled 3 → 2 → 1 at about 02:13-02:15. It
+showed the same pattern as the first two runs. *(Figures 18-25.)*
+
 **Problem found and fixed during testing.** The first run crashed instances in a loop under load
 although CPU stayed low. The logs showed `QueuePool limit … reached, connection timed out`: FastAPI's
 worker threads and the database connections were waiting on each other (a thread-pool / connection-pool
@@ -283,7 +290,7 @@ the queue. After the fix the system degraded gracefully and scaled exactly as de
 riders can deliver. `infra/scripts/clear-test-orders.sh` cancels leftover load-test orders so real
 customers aren't queued behind them.
 
-*(Console evidence: Appendix B.)*
+*(Console evidence: Appendix B, Figures 18-25.)*
 
 ## 8. Cost
 | Resource | Approx. cost per hour |
@@ -298,7 +305,9 @@ customers aren't queued behind them.
 
 The nightly Lambda auto-stop means the stack only costs money while it's being used. A full working
 day costs well under $1, so the $50 credit covers the whole project with a large margin.
-The credit actually used is shown on the Learner Lab page (screenshot 28).
+**Credit actually used:** by 25 Nov 2026, after all development, three load tests and the CI/CD
+deployments, the Learner Lab page shows **$3.90 of the $50** used, under 8 % *(Figure 37)*. The
+`feastflow-monthly` budget ($50) is healthy with its alert threshold OK *(Figure 36)*.
 
 ## 9. Conclusion
 FeastFlow runs end to end on AWS: customers order through a load balancer, orders go through SQS to
@@ -367,12 +376,74 @@ Delivered, with the rider assigned automatically (the order went through SQS and
 **Figure 16: Prime vs standard during the burst: Prime waited 46.7 s for a rider, standard 1 min 40 s**
 ![Prime vs standard](screenshots/11-prime-vs-standard.png)
 
-**Figure 17: Festival runs history**
+**Figure 17: Festival runs history: run #3 (25 Nov, 5,000 orders, 35 % Prime) in progress, with the two completed 300-order runs from 21 Nov below it. Each run records the instance that ran it**
 ![Festival runs](screenshots/11b-festival-runs.png)
 
 ## Appendix B: AWS Console screenshots
-These are taken in the AWS Console during the next lab session (the console header shows the Learner
-Lab identity). Add them to `docs/screenshots/` with these names and they belong here:
-14 ASG activity (scale-out and scale-in) · 15 target group with healthy targets · 16 load balancing ·
-18 CloudWatch dashboard · 19 SQS · 20 SNS · 21 RDS · 22 S3 · 23 ECR · 24 alarms · 25 logs ·
-26 Lambda + scheduler · 27 budget · 28 Learner Lab credit used.
+Taken on 25 Nov 2026 during the third load test (section 7.3). The console header shows the Learner
+Lab identity. The CloudWatch dashboard is in UTC (IST = UTC + 5:30); all other times are IST.
+
+### Load test, auto scaling and load balancing
+**Figure 18: Locust load generator just after Start: 50 users, 27 requests/s, p95 91 ms, 0 failures**
+![Locust running](screenshots/12-locust-running.png)
+
+**Figure 19: CloudWatch dashboard early in the run (about 01:45 IST): CPU rising on the single instance and requests climbing on the ALB**
+![Dashboard early](screenshots/13-dashboard-cpu.png)
+
+**Figure 20: ASG activity history. Top row: `start.sh` raises the desired capacity 0 → 1 at 01:27 on 25 Nov. Below it, the scale-in from the 22 Nov run: the target-tracking low-CPU alarm reduced desired capacity 3 → 2 at 01:25 and 2 → 1 at 01:27, then `stop.sh` set it to 0 at 01:29**
+![ASG activity](screenshots/14-asg-scale-out.png)
+
+**Figure 21: Target group `feastflow-tg` after scale-out: 2 healthy targets in two Availability Zones (us-east-1a and us-east-1b)**
+![Healthy targets](screenshots/15-targets-healthy.png)
+
+**Figure 22: Load balancing: 10 requests to `/api/health` through the ALB are answered by two different instances**
+![Load balancing](screenshots/16-load-balancing.png)
+
+**Figure 23: Admin Cloud & cost panel during the rush (01:54): 3 of max 4 servers in service, CPU around the 60 % target line, servers stepping up 1 → 2 → 3, current cost $0.125 per hour**
+![Cloud panel](screenshots/29-cloud-panel.png)
+
+**Figure 24: CloudWatch dashboard for the whole run: CPU peaks at about 75 % (20:10-20:25 UTC), instances in service go 1 → 2 → 3 and back to 1, ALB requests rise and fall with the rush, and SQS queues drain**
+![Dashboard full](screenshots/18-dashboard-full.png)
+
+**Figure 25: ASG self-healing after the test: when the ALB health check failed on an instance, the group terminated it and launched a replacement automatically (03:06 and 03:12)**
+![ASG health replacement](screenshots/17-asg-scale-in.png)
+
+### Messaging and notifications
+**Figure 26: SNS email subscription confirmation for the `order-notifications` topic**
+![SNS email](screenshots/05-sns-email.png)
+
+**Figure 27: SQS queues: `orders-prime` and `orders-standard`, each with a dead-letter queue, encrypted with SSE-SQS**
+![SQS](screenshots/19-sqs.png)
+
+**Figure 28: SNS topics: `order-notifications` (customer emails) and `feastflow-alerts` (alarm emails). `RedshiftSNS` belongs to the Learner Lab, not FeastFlow**
+![SNS](screenshots/20-sns.png)
+
+### Data and storage
+**Figure 29: RDS `feastflow-db`: MySQL on db.t3.micro, Available, 5 connections**
+![RDS](screenshots/21-rds.png)
+
+**Figure 30: S3 assets bucket, `menu/` folder with the dish images (20 objects)**
+![S3](screenshots/22-s3.png)
+
+**Figure 31: ECR repository `feastflow`: images tagged with their git commit by the CI/CD pipeline (`50234d0`, `latest`, `90caa95`)**
+![ECR](screenshots/23-ecr.png)
+
+### Monitoring
+**Figure 32: CloudWatch alarms: all 9 FeastFlow alarms OK (0 in alarm) across ELB, RDS, SQS, EC2 and the CloudWatch agent**
+![Alarms](screenshots/24-alarms.png)
+
+**Figure 33: CloudWatch log group `/feastflow/app`: separate API and worker log streams for every instance**
+![Logs](screenshots/25-logs.png)
+
+### Cost control
+**Figure 34: Lambda `feastflow-auto-stop`, triggered by EventBridge Scheduler**
+![Lambda](screenshots/26a-lambda-scheduler.png)
+
+**Figure 35: EventBridge schedule `feastflow-nightly-stop`: enabled, runs at 23:00 in the Asia/Kolkata time zone**
+![Scheduler](screenshots/26b-lambda-scheduler.png)
+
+**Figure 36: AWS Budget `feastflow-monthly`: $50 per month, healthy, alert threshold OK**
+![Budget](screenshots/27-budget.png)
+
+**Figure 37: Learner Lab credit: $3.90 of $50 used**
+![Credit used](screenshots/28-credit-used.png)
