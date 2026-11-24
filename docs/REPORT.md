@@ -153,8 +153,14 @@ push / pull request ─┬─ backend: ruff lint + 9 pytest suites (SQLite + mot
   early with a clear message while CI still runs. Instance refresh is blocked too, which is why the
   pipeline reuses `redeploy.sh`.
 
-<!-- Screenshots to add: Actions run graph (ci-cd-run.png), deploy step summary (ci-cd-summary.png),
-     ECR image tags (ci-cd-ecr.png) -->
+**Figure 5.1a: A pipeline run on `main` (commit `90caa95`): backend and frontend pass, deploy passes; the docker check is skipped because on `main` the deploy job builds the image**
+![CI/CD run: all jobs green](screenshots/30-cicd-run.png)
+
+**Figure 5.1b: The deploy job's summary: image `feastflow:90caa95` (also `:latest`) pushed to ECR. The stack was parked at the time (0 in-service instances), so the image went live on the next `start.sh`**
+![Deploy summary](screenshots/31-cicd-summary.png)
+
+**Figure 5.1c: The lab session keys stored as encrypted repository secrets (values are never shown)**
+![Repository secrets](screenshots/32-cicd-secrets.png)
 
 Problems found and fixed during the first real deployment:
 - Learner Lab blocks **ASG instance refresh**, so `redeploy.sh` replaces instances itself (start new ones,
