@@ -12,6 +12,8 @@ PROJECT="FeastFlow"
 INFRA_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 REPO_DIR="$(cd "$INFRA_DIR/.." && pwd)"
 STATE_FILE="$INFRA_DIR/.state.env"   # git-ignored: resource ids + generated secrets
+# On a CI runner (GitHub Actions deploy job) this file starts empty: ids are looked up by name and
+# the secrets generated below are throwaway, since pushing an image and redeploying never use them.
 touch "$STATE_FILE"
 # Secrets come only from the state file. A shell that loaded backend/.env would otherwise leak
 # its local placeholders (ChangeMe123!, change-me) into the deployment.

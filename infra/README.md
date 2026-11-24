@@ -9,6 +9,9 @@ Everything is tagged `Project=FeastFlow`. `infra/localstack/` and `infra/mysql/`
    (never into this repo). The keys change every session.
 3. `aws sts get-caller-identity` should print the account number.
 4. Docker Desktop must be running for `02b-push-image.sh`.
+5. For the CI/CD deploy job: `./gh-set-aws-secrets.sh` copies the new keys into the GitHub repo's
+   Actions secrets (needs `gh auth login`; or set `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`,
+   `AWS_SESSION_TOKEN` by hand under Settings → Secrets and variables → Actions).
 
 ## First deployment (~30-45 min, mostly waiting for RDS)
 ```bash
@@ -33,7 +36,8 @@ That file is git-ignored; keep it, the scripts need it.
 |---|---|
 | Park everything (ASG → 0, Locust + RDS stopped) | `./stop.sh` |
 | Resume | `./start.sh` (site back ~5 min after RDS is up) |
-| Ship new code | `./02b-push-image.sh && ./redeploy.sh` |
+| Ship new code | push to `main`: GitHub Actions tests, builds, pushes to ECR and runs `redeploy.sh` (or Actions → CI/CD → Run workflow) |
+| Ship new code by hand (fallback) | `./02b-push-image.sh && ./redeploy.sh` |
 | After a Locust load test (cancels leftover load-test orders) | `./clear-test-orders.sh` |
 | Change app settings (env vars) | edit `05`, re-run it, then `./redeploy.sh` |
 | Delete everything after grading | `CONFIRM=yes ./99-teardown.sh` |

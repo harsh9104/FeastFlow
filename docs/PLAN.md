@@ -33,7 +33,7 @@ Locust EC2 (t3.small, only during tests) ──► ALB   (festival HTTP load)
 - The admin dashboard refreshes by **polling every 3 s**. This works behind the ALB without sticky sessions or websockets.
 
 ## 3. Tech stack
-FastAPI (Python 3.12) + SQLAlchemy + Alembic · MySQL 8 (RDS) · boto3 · React + Vite + TypeScript · Docker · LocalStack for SQS/SNS/S3 during local development · Locust · AWS CLI bash scripts for infra · GitHub Actions for CI.
+FastAPI (Python 3.12) + SQLAlchemy + Alembic · MySQL 8 (RDS) · boto3 · React + Vite + TypeScript · Docker · LocalStack for SQS/SNS/S3 during local development · Locust · AWS CLI bash scripts for infra · GitHub Actions for CI/CD.
 
 ## 4. Data model (MySQL)
 - `users` (id, name, email, password_hash, role CUSTOMER/ADMIN, is_prime, prime_expires_at)

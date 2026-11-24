@@ -124,6 +124,38 @@ run again (it skips what already exists).
 | `09-budget.sh` | Monthly budget and alerts |
 | `stop.sh` / `start.sh` / `redeploy.sh` / `99-teardown.sh` | Daily park/resume, roll out new code, delete everything |
 
+### 5.1 CI/CD pipeline
+New code reaches AWS through a GitHub Actions pipeline (`.github/workflows/ci-cd.yml`):
+
+```
+push / pull request ─┬─ backend: ruff lint + 9 pytest suites (SQLite + moto fakes for AWS)
+                     └─ frontend: TypeScript typecheck + Vite build
+                              │ (both must pass)
+        branch / PR ──────────┴──► docker: image build check
+        push to main ─────────────► deploy (GitHub environment "production"):
+                                     1. build image, push to ECR as feastflow:<git sha> and :latest
+                                     2. redeploy.sh: rolling replacement of the ASG instances
+                                     3. smoke test /api/health/ready through the load balancer
+```
+
+- **Continuous integration:** every push and pull request runs the lint, tests and both builds, so a
+  broken change is caught before it can be deployed.
+- **Continuous deployment:** a green push to `main` is deployed with no manual steps and no downtime.
+  New instances must pass the target group health check before the old ones are removed, so a bad
+  image never takes the site down (the roll stops and the old instances stay). Each image is tagged with
+  its commit, so a rollback is a re-run of an older workflow run.
+- Deploys never overlap (a `concurrency` group), and each run writes the image tag, site URL and
+  health result to its summary page. If the stack is parked, the image is still pushed and goes live
+  on the next `start.sh`.
+- **Learner Lab limits:** the lab can't create IAM users or an OIDC role for GitHub, so the deploy job
+  uses the lab's session keys stored as encrypted repository secrets. They expire with each lab session,
+  so `infra/scripts/gh-set-aws-secrets.sh` refreshes them after Start Lab; until then the deploy job fails
+  early with a clear message while CI still runs. Instance refresh is blocked too, which is why the
+  pipeline reuses `redeploy.sh`.
+
+<!-- Screenshots to add: Actions run graph (ci-cd-run.png), deploy step summary (ci-cd-summary.png),
+     ECR image tags (ci-cd-ecr.png) -->
+
 Problems found and fixed during the first real deployment:
 - Learner Lab blocks **ASG instance refresh**, so `redeploy.sh` replaces instances itself (start new ones,
   wait until healthy, remove old ones) while pausing auto scaling so it can't interfere.

@@ -4,7 +4,9 @@
 # this rolls by hand: add as many new instances as are running now, wait until they are healthy
 # in the target group, then terminate the old ones. No downtime.
 source "$(dirname "${BASH_SOURCE[0]}")/00-env.sh"
-: "${ASG_NAME:?run 05 first}"; : "${TG_ARN:?run 05 first}"
+# A CI runner has no infra/.state.env, so look the target group up by name when it isn't saved.
+TG_ARN="${TG_ARN:-$(aws elbv2 describe-target-groups --names "$TG_NAME"   --query 'TargetGroups[0].TargetGroupArn' --output text 2>/dev/null || true)}"
+: "${ASG_NAME:?run 05 first}"; [ -n "$TG_ARN" ] && [ "$TG_ARN" != "None" ] || { echo "target group $TG_NAME not found: run 05 first"; exit 1; }
 
 asg() { aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names "$ASG_NAME" --query "AutoScalingGroups[0].$1" --output text; }
 OLD="$(asg 'Instances[?LifecycleState==`InService`].InstanceId')"
